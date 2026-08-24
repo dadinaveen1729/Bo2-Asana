@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: 0 0% 100%;
+  --surface: 0 0% 100%;
+  --surface-hover: 220 20% 97%;
+  --border: 220 13% 91%;
+  --border-strong: 220 13% 83%;
+  --ink: 222 20% 15%;
+  --ink-muted: 220 9% 46%;
+  --ink-faint: 220 9% 65%;
+  --sidebar: 220 23% 97%;
+  --sidebar-ink: 222 20% 24%;
+  --sidebar-hover: 220 20% 92%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: hsl(var(--canvas));
+  color: hsl(var(--ink));
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(220 13% 85%);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 13% 75%);
+  background-clip: content-box;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Rich text task description */
+.rte {
+  outline: none;
+  min-height: 2rem;
+}
+.rte:empty:before {
+  content: attr(data-placeholder);
+  color: hsl(var(--ink-faint));
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, hsl(var(--surface-hover)) 25%, hsl(220 20% 94%) 37%, hsl(var(--surface-hover)) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
