@@ -227,9 +227,18 @@ export function useTaskDetail(taskId: string | undefined) {
     [supabase]
   );
 
+  const moveToSection = useCallback(
+    async (projectId: string, sectionId: string) => {
+      if (!taskId) return;
+      await supabase.from('task_projects').update({ section_id: sectionId }).eq('task_id', taskId).eq('project_id', projectId);
+      loadTask();
+    },
+    [supabase, taskId, loadTask]
+  );
+
   return {
     task, comments, activity, customValues, attachments, dependencies, dependents, followers, likes, loading,
     updateTask, addComment, deleteComment, toggleLike, toggleFollow, addTag, removeTag,
-    setCustomFieldValue, addSubtask, addDependency, removeDependency, reload: loadTask,
+    setCustomFieldValue, addSubtask, addDependency, removeDependency, moveToSection, reload: loadTask,
   };
 }

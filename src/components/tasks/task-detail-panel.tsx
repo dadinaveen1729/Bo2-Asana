@@ -16,6 +16,7 @@ import { useTaskPanel } from '@/lib/task-panel-context';
 import { useTaskDetail } from '@/hooks/use-task-detail';
 import { useTags } from '@/hooks/use-tags';
 import { useCustomFields } from '@/hooks/use-custom-fields';
+import { useSections } from '@/hooks/use-sections';
 import { AssigneePicker, DatePickerButton, PriorityPicker, TagPicker } from '@/components/tasks/pickers';
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { TaskAttachments } from '@/components/tasks/task-attachments';
@@ -52,12 +53,14 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
   const {
     task, comments, activity, customValues, attachments, dependencies, dependents, followers, likes, loading,
     updateTask, addComment, toggleLike, toggleFollow, addTag, removeTag, setCustomFieldValue,
-    addSubtask, addDependency, removeDependency,
+    addSubtask, addDependency, removeDependency, moveToSection,
   } = useTaskDetail(taskId);
 
-  const primaryProject = task?.projects?.[0]?.project || null;
+  const primaryProjectLink = task?.projects?.[0] || null;
+  const primaryProject = primaryProjectLink?.project || null;
   const { tags, createTag } = useTags(primaryProject?.workspace_id);
   const { fields } = useCustomFields(primaryProject?.id);
+  const { sections } = useSections(primaryProject?.id);
 
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
@@ -183,13 +186,6 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
       </div>
 
       <div className="scrollbar-thin flex-1 overflow-y-auto px-6 py-5">
-        {primaryProject && (
-          <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-faint">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: primaryProject.color || '#FC636B' }} />
-            {primaryProject.name}
-          </div>
-        )}
-
         <textarea
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -217,6 +213,33 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
             <span className="w-24 shrink-0 text-xs font-medium text-ink-faint">Due date</span>
             <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} />
           </div>
+          {primaryProject && (
+            <div className="flex items-center gap-3">
+              <span className="w-24 shrink-0 text-xs font-medium text-ink-faint">Projects</span>
+              <div className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: primaryProject.color || '#FC636B' }} />
+                <span className="text-ink">{primaryProject.name}</span>
+                {sections.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="ml-1 flex items-center gap-1 rounded-md bg-surface-hover px-1.5 py-0.5 text-xs font-medium text-ink-muted hover:bg-border">
+                        {sections.find((s) => s.id === primaryProjectLink?.section_id)?.name || 'No section'}
+                        <ChevronRight size={11} className="rotate-90" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {sections.map((s) => (
+                        <DropdownMenuItem key={s.id} onSelect={() => primaryProject && moveToSection(primaryProject.id, s.id)}>
+                          {s.id === primaryProjectLink?.section_id && <Check size={13} className="text-brand-500" />}
+                          {s.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <span className="w-24 shrink-0 text-xs font-medium text-ink-faint">Priority</span>
             <PriorityPicker priority={task.priority} onChange={(p) => updateTask({ priority: p as any })} />

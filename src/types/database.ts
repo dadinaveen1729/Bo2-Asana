@@ -468,6 +468,7 @@ export type Database = {
           email: string
           id: string
           invited_by: string | null
+          project_id: string | null
           role: Database["public"]["Enums"]["workspace_role"]
           token: string
           workspace_id: string
@@ -478,6 +479,7 @@ export type Database = {
           email: string
           id?: string
           invited_by?: string | null
+          project_id?: string | null
           role?: Database["public"]["Enums"]["workspace_role"]
           token?: string
           workspace_id: string
@@ -488,6 +490,7 @@ export type Database = {
           email?: string
           id?: string
           invited_by?: string | null
+          project_id?: string | null
           role?: Database["public"]["Enums"]["workspace_role"]
           token?: string
           workspace_id?: string
@@ -498,6 +501,13 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
