@@ -37,8 +37,8 @@ function useAutoResize(value: string) {
 export function TaskDetailPanel() {
   const { openTaskId, closeTask, openTask } = useTaskPanel();
   return (
-    <Sheet open={!!openTaskId} onOpenChange={(v) => !v && closeTask()}>
-      <SheetContent width={620}>
+    <Sheet open={!!openTaskId} onOpenChange={(v) => !v && closeTask()} modal={false}>
+      <SheetContent width={620} overlay={false}>
         <SheetTitle className="sr-only">Task details</SheetTitle>
         {openTaskId && <TaskDetailBody taskId={openTaskId} onClose={closeTask} onOpenTask={openTask} />}
       </SheetContent>

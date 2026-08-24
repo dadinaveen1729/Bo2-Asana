@@ -12,11 +12,12 @@ export function SheetContent({
   className,
   children,
   width = 640,
+  overlay = true,
   ...props
-}: DialogPrimitive.DialogContentProps & { width?: number }) {
+}: DialogPrimitive.DialogContentProps & { width?: number; overlay?: boolean }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/30 data-[state=open]:animate-fade-in" />
+      {overlay && <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/30 data-[state=open]:animate-fade-in" />}
       <DialogPrimitive.Content
         className={cn(
           'fixed right-0 top-0 z-50 flex h-screen flex-col border-l border-border bg-white shadow-2xl focus:outline-none',
@@ -25,6 +26,8 @@ export function SheetContent({
         )}
         style={{ width, maxWidth: '100vw' }}
         {...props}
+        onInteractOutside={!overlay ? (e) => e.preventDefault() : props.onInteractOutside}
+        onPointerDownOutside={!overlay ? (e) => e.preventDefault() : props.onPointerDownOutside}
       >
         {children}
       </DialogPrimitive.Content>
