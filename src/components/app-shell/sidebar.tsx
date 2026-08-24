@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, CheckSquare, Inbox, LayoutGrid, Target, ChevronDown, ChevronRight,
-  Plus, Users, Settings, LogOut, Hash, Sparkles,
+  Plus, Users, Settings, LogOut, Hash, Sparkles, UserCircle2, UserPlus, Building2,
 } from 'lucide-react';
 import { useWorkspace } from '@/lib/workspace-context';
 import { useTeams, useProjects } from '@/hooks/use-teams-projects';
@@ -17,9 +17,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CreateProjectDialog } from '@/components/projects/create-project-dialog';
 import { CreateTeamDialog } from '@/components/teams/create-team-dialog';
 import { QuickAddTaskDialog } from '@/components/tasks/quick-add-task-dialog';
+import { InviteDialog } from '@/components/admin/invite-dialog';
+import { EditProfileDialog } from '@/components/people/edit-profile-dialog';
 
 function NavLink({ href, icon: Icon, label, badge, active }: { href: string; icon: any; label: string; badge?: number; active: boolean }) {
   return (
@@ -50,10 +51,10 @@ export function Sidebar() {
   const { unreadCount } = useNotifications(user?.id);
   const [teamsOpen, setTeamsOpen] = useState(true);
   const [openTeamIds, setOpenTeamIds] = useState<Record<string, boolean>>({});
-  const [createProjectOpen, setCreateProjectOpen] = useState(false);
-  const [createProjectTeamId, setCreateProjectTeamId] = useState<string | null>(null);
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -90,7 +91,7 @@ export function Sidebar() {
               <DropdownMenuItem onSelect={() => setQuickAddOpen(true)}>
                 <CheckSquare size={15} /> New task
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => { setCreateProjectTeamId(null); setCreateProjectOpen(true); }}>
+              <DropdownMenuItem onSelect={() => router.push('/projects/new')}>
                 <LayoutGrid size={15} /> New project
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setCreateTeamOpen(true)}>
@@ -115,6 +116,7 @@ export function Sidebar() {
           <div className="mt-5 space-y-0.5">
             <NavLink href="/portfolios" icon={Sparkles} label="Portfolios" active={pathname.startsWith('/portfolios')} />
             <NavLink href="/goals" icon={Target} label="Goals" active={pathname.startsWith('/goals')} />
+            <NavLink href="/people" icon={Users} label="People" active={pathname.startsWith('/people')} />
           </div>
 
           {/* Teams tree */}
@@ -156,7 +158,7 @@ export function Sidebar() {
                           <span className="truncate">{team.name}</span>
                         </Link>
                         <button
-                          onClick={() => { setCreateProjectTeamId(team.id); setCreateProjectOpen(true); }}
+                          onClick={() => router.push(`/projects/new?team=${team.id}`)}
                           className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-ink-faint hover:bg-white hover:text-ink group-hover:flex"
                         >
                           <Plus size={13} />
@@ -225,10 +227,23 @@ export function Sidebar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" className="w-60">
-              <DropdownMenuLabel>{members.length} member{members.length === 1 ? '' : 's'} in workspace</DropdownMenuLabel>
+              <DropdownMenuLabel>{profile?.full_name || profile?.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => user && router.push(`/people/${user.id}`)}>
+                <UserCircle2 size={15} /> Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => router.push('/admin')}>
-                <Settings size={15} /> Admin & members
+                <Building2 size={15} /> My organization
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setInviteOpen(true)}>
+                <UserPlus size={15} /> Invite teammates
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setEditProfileOpen(true)}>
+                <Settings size={15} /> Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => router.push('/admin')}>
+                <Users size={15} /> Admin & members
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleSignOut} className="text-red-600 data-[highlighted]:bg-red-50">
@@ -239,14 +254,10 @@ export function Sidebar() {
         </div>
       </aside>
 
-      <CreateProjectDialog
-        open={createProjectOpen}
-        onOpenChange={setCreateProjectOpen}
-        defaultTeamId={createProjectTeamId}
-        onCreated={(id) => router.push(`/projects/${id}`)}
-      />
       <CreateTeamDialog open={createTeamOpen} onOpenChange={setCreateTeamOpen} />
       <QuickAddTaskDialog open={quickAddOpen} onOpenChange={setQuickAddOpen} />
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+      <EditProfileDialog open={editProfileOpen} onOpenChange={setEditProfileOpen} profile={profile} />
     </>
   );
 }
