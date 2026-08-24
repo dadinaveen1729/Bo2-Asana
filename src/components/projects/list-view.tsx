@@ -6,19 +6,44 @@ import {
   type DragEndEvent, type DragOverEvent, type DragStartEvent,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowUpDown, ChevronDown, ChevronRight, Filter, Layers, MoreHorizontal, Plus,
+  Search, SlidersHorizontal, Trash2,
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { useWorkspace } from '@/lib/workspace-context';
 import { useSections } from '@/hooks/use-sections';
 import { useProjectTasks, type ProjectTask } from '@/hooks/use-tasks';
+import { useCustomFields, type CustomField } from '@/hooks/use-custom-fields';
 import { TaskRow } from '@/components/tasks/task-row';
+import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+import type { Tables } from '@/types/database';
 
 const NONE = '__none__';
 
-export function ListView({ projectId }: { projectId: string }) {
-  const { workspace, user } = useWorkspace();
+type CustomFieldValue = Tables<'custom_field_values'>;
+
+function fieldColWidth(type: CustomField['type']) {
+  switch (type) {
+    case 'checkbox': return 'w-10';
+    case 'number': return 'w-20';
+    case 'date': return 'w-28';
+    case 'people': return 'w-32';
+    case 'multi_select': return 'w-40';
+    case 'single_select': return 'w-32';
+    default: return 'w-28';
+  }
+}
+
+export function ListView({ projectId, onAddColumn }: { projectId: string; onAddColumn?: () => void }) {
+  const { workspace, user, members } = useWorkspace();
   const { sections, createSection, renameSection, deleteSection } = useSections(projectId);
   const { tasks, createTask, moveTask, toggleComplete } = useProjectTasks(projectId);
+  const { fields } = useCustomFields(projectId);
+  const supabase = useMemo(() => createClient(), []);
 
   const [columns, setColumns] = useState<Record<string, string[]>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -28,8 +53,55 @@ export function ListView({ projectId }: { projectId: string }) {
   const [newSectionName, setNewSectionName] = useState('');
   const [addingSection, setAddingSection] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [customValues, setCustomValues] = useState<CustomFieldValue[]>([]);
 
   const taskById = useMemo(() => Object.fromEntries(tasks.map((t) => [t.id, t])), [tasks]);
+
+  const fieldIds = useMemo(() => fields.map((f) => f.id), [fields]);
+
+  useEffect(() => {
+    if (fieldIds.length === 0) {
+      setCustomValues([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.from('custom_field_values').select('*').in('custom_field_id', fieldIds);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (!cancelled) setCustomValues(data || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, fieldIds]);
+
+  useEffect(() => {
+    if (fieldIds.length === 0) return;
+    const channel = supabase
+      .channel(`list-view-custom-values:${projectId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_field_values' }, async () => {
+        const { data, error } = await supabase.from('custom_field_values').select('*').in('custom_field_id', fieldIds);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        setCustomValues(data || []);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, projectId, fieldIds]);
+
+  async function setCellValue(taskId: string, fieldId: string, patch: Partial<CustomFieldValue>) {
+    const { error } = await supabase
+      .from('custom_field_values')
+      .upsert({ task_id: taskId, custom_field_id: fieldId, ...patch }, { onConflict: 'task_id,custom_field_id' });
+    if (error) toast.error(error.message);
+  }
 
   useEffect(() => {
     const keys = [...sections.map((s) => s.id), NONE];
@@ -109,16 +181,72 @@ export function ListView({ projectId }: { projectId: string }) {
 
   const allSectionKeys = [...sections.map((s) => ({ id: s.id, name: s.name })), ...(columns[NONE]?.length || sections.length === 0 ? [{ id: NONE, name: 'Tasks' }] : [])];
 
+  function handleQuickAddTask() {
+    const target = allSectionKeys[0];
+    if (!target) return;
+    setCollapsed((c) => ({ ...c, [target.id]: false }));
+    setAddingIn(target.id);
+  }
+
   return (
     <div className="pb-24">
-      <div className="flex items-center justify-end gap-2 px-6 pb-2 pt-4">
+      <div className="flex items-center justify-between gap-2 px-6 pb-2 pt-4">
         <button
-          onClick={() => setShowCompleted((s) => !s)}
-          className="rounded-md px-2.5 py-1 text-xs font-medium text-ink-muted hover:bg-surface-hover"
+          onClick={handleQuickAddTask}
+          className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
         >
-          {showCompleted ? 'Hide' : 'Show'} completed
+          <Plus size={13} /> Add task
         </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowCompleted((s) => !s)}
+            className="rounded-md px-2.5 py-1 text-xs font-medium text-ink-muted hover:bg-surface-hover"
+          >
+            {showCompleted ? 'Hide' : 'Show'} completed
+          </button>
+          <div className="mx-1 h-4 w-px bg-border" />
+          <button title="Filter" onClick={() => toast('Filter is coming soon')} className="rounded-md p-1.5 text-ink-faint hover:bg-surface-hover">
+            <Filter size={15} />
+          </button>
+          <button title="Sort" onClick={() => toast('Sort is coming soon')} className="rounded-md p-1.5 text-ink-faint hover:bg-surface-hover">
+            <ArrowUpDown size={15} />
+          </button>
+          <button title="Group" onClick={() => toast('Group is coming soon')} className="rounded-md p-1.5 text-ink-faint hover:bg-surface-hover">
+            <Layers size={15} />
+          </button>
+          <button title="Options" onClick={() => toast('Options are coming soon')} className="rounded-md p-1.5 text-ink-faint hover:bg-surface-hover">
+            <SlidersHorizontal size={15} />
+          </button>
+          <button title="Search" onClick={() => toast('Search is coming soon')} className="rounded-md p-1.5 text-ink-faint hover:bg-surface-hover">
+            <Search size={15} />
+          </button>
+        </div>
       </div>
+
+      {allSectionKeys.length > 0 && (
+        <div className="flex items-center gap-2 px-6 py-1.5">
+          <div className="w-[14px] shrink-0" />
+          <div className="w-4 shrink-0" />
+          <span className="flex-1 text-[13px] font-medium text-ink-faint">Name</span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className="w-[92px] shrink-0 text-[13px] font-medium text-ink-faint">Priority</span>
+            <span className="w-[84px] shrink-0 text-[13px] font-medium text-ink-faint">Due date</span>
+          </div>
+          <span className="w-14 shrink-0 text-[13px] font-medium text-ink-faint">Assignee</span>
+          {fields.map((f) => (
+            <span key={f.id} className={cn(fieldColWidth(f.type), 'shrink-0 truncate text-[13px] font-medium text-ink-faint')}>
+              {f.name}
+            </span>
+          ))}
+          <button
+            onClick={onAddColumn}
+            title="Add column"
+            className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint hover:bg-surface-hover"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <div className="px-4">
@@ -152,9 +280,30 @@ export function ListView({ projectId }: { projectId: string }) {
                 {!isCollapsed && (
                   <div className="overflow-hidden rounded-xl border border-border">
                     <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-                      {ids.map((id) => taskById[id] && (
-                        <TaskRow key={id} task={taskById[id]} onToggleComplete={(v) => toggleComplete(id, v)} />
-                      ))}
+                      {ids.map((id) => {
+                        const t = taskById[id];
+                        if (!t) return null;
+                        return (
+                          <div key={id} className="flex items-stretch">
+                            <div className="min-w-0 flex-1">
+                              <TaskRow task={t} onToggleComplete={(v) => toggleComplete(id, v)} />
+                            </div>
+                            {fields.map((f) => (
+                              <div
+                                key={f.id}
+                                className={cn(fieldColWidth(f.type), 'shrink-0 border-b border-border px-2 py-1.5 hover:bg-surface-hover')}
+                              >
+                                <CustomFieldInput
+                                  field={f}
+                                  value={customValues.find((v) => v.task_id === id && v.custom_field_id === f.id) || null}
+                                  onChange={(patch) => setCellValue(id, f.id, patch)}
+                                  members={members}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </SortableContext>
                     {addingIn === sec.id ? (
                       <div className="flex items-center gap-2 border-b border-border px-3 py-2">

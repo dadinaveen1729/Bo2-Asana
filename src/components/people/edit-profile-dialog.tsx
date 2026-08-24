@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, RefreshCw, Upload } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { colorForIndex } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,7 @@ export function EditProfileDialog({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [syncingMs, setSyncingMs] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,6 +75,28 @@ export function EditProfileDialog({
     setUploading(false);
   }
 
+  async function handleSyncFromMicrosoft() {
+    if (!profile) return;
+    setSyncingMs(true);
+    setUploadError(null);
+    const res = await fetch('/api/microsoft/sync-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: profile.id }),
+    });
+    const json = await res.json();
+    setSyncingMs(false);
+    if (!res.ok) {
+      setUploadError(json.error || 'Could not sync from Microsoft 365.');
+      return;
+    }
+    if (!json.synced) {
+      setUploadError(json.reason || 'No Microsoft 365 photo found for this account.');
+      return;
+    }
+    setAvatarUrl(json.avatarUrl);
+  }
+
   async function handleSave() {
     if (!profile) return;
     setSaving(true);
@@ -112,15 +135,26 @@ export function EditProfileDialog({
                 className="hidden"
                 onChange={(e) => handleAvatarPick(e.target.files?.[0])}
               />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover disabled:opacity-50"
-              >
-                {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-                {uploading ? 'Uploading…' : 'Upload photo'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || syncingMs}
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover disabled:opacity-50"
+                >
+                  {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                  {uploading ? 'Uploading…' : 'Upload photo'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSyncFromMicrosoft}
+                  disabled={uploading || syncingMs}
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover disabled:opacity-50"
+                >
+                  {syncingMs ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                  {syncingMs ? 'Syncing…' : 'Sync from Microsoft 365'}
+                </button>
+              </div>
               {uploadError && <p className="mt-1 text-xs text-red-600">{uploadError}</p>}
             </div>
           </div>

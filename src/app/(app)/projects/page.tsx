@@ -3,15 +3,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowUpDown, Hash, Plus, Search } from 'lucide-react';
+import { ArrowUpDown, Hash, Plus, Search, Star } from 'lucide-react';
 import { useWorkspace } from '@/lib/workspace-context';
 import { useTeams, useProjects } from '@/hooks/use-teams-projects';
 import { createClient } from '@/lib/supabase/client';
+import { useFavoritesDnd } from '@/app/(app)/layout';
 import { AvatarStack } from '@/components/ui/avatar';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { PROJECT_STATUS_META } from '@/lib/utils';
+import { PROJECT_STATUS_META, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface Row {
@@ -25,6 +26,7 @@ export default function BrowseProjectsPage() {
   const { workspace, members } = useWorkspace();
   const { teams } = useTeams(workspace?.id);
   const { projects } = useProjects(workspace?.id);
+  const { favoriteProjectIds, addFavorite, removeFavorite } = useFavoritesDnd();
   const [query, setQuery] = useState('');
   const [teamFilter, setTeamFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -112,7 +114,8 @@ export default function BrowseProjectsPage() {
       </div>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-border">
-        <div className="grid grid-cols-[1fr_140px_160px_120px] items-center gap-3 border-b border-border bg-surface-hover/50 px-4 py-2 text-[12px] font-semibold text-ink-faint">
+        <div className="grid grid-cols-[24px_1fr_140px_160px_120px] items-center gap-3 border-b border-border bg-surface-hover/50 px-4 py-2 text-[12px] font-semibold text-ink-faint">
+          <span aria-hidden />
           <span>Name</span>
           <span>Members</span>
           <span>Portfolios</span>
@@ -123,8 +126,17 @@ export default function BrowseProjectsPage() {
         {filtered.map((p) => {
           const row = rows[p.id];
           const meta = PROJECT_STATUS_META[p.status];
+          const favorited = favoriteProjectIds.has(p.id);
           return (
-            <div key={p.id} className="grid grid-cols-[1fr_140px_160px_120px] items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-hover">
+            <div key={p.id} className="grid grid-cols-[24px_1fr_140px_160px_120px] items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-hover">
+              <button
+                type="button"
+                onClick={() => (favorited ? removeFavorite(p.id) : addFavorite(p.id))}
+                title={favorited ? 'Unpin from sidebar' : 'Pin to sidebar'}
+                className={cn('rounded-md p-0.5 transition', favorited ? 'text-amber-400 hover:text-amber-500' : 'text-ink-faint hover:text-ink-muted')}
+              >
+                <Star size={14} fill={favorited ? 'currentColor' : 'none'} />
+              </button>
               <Link href={`/projects/${p.id}`} className="flex min-w-0 items-center gap-2">
                 <Hash size={14} className="shrink-0" style={{ color: p.color || '#FC636B' }} />
                 <span className="truncate text-sm font-medium text-ink">{p.name}</span>

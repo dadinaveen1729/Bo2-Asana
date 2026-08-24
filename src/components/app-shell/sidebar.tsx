@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useDroppable } from '@dnd-kit/core';
 import {
   Home, CheckSquare, Inbox, LayoutGrid, Target, ChevronDown, ChevronRight,
-  Plus, Users, Settings, LogOut, Hash, Sparkles, UserCircle2, UserPlus, Building2,
+  Plus, Users, Settings, LogOut, Hash, Sparkles, UserCircle2, UserPlus, Building2, Star, X,
 } from 'lucide-react';
 import { useWorkspace } from '@/lib/workspace-context';
 import { useTeams, useProjects } from '@/hooks/use-teams-projects';
 import { useNotifications } from '@/hooks/use-notifications';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { useFavoritesDnd, SIDEBAR_STARRED_DROP_ID } from '@/app/(app)/layout';
 import { Avatar } from '@/components/ui/avatar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -49,7 +51,10 @@ export function Sidebar() {
   const { teams } = useTeams(workspace?.id);
   const { projects } = useProjects(workspace?.id);
   const { unreadCount } = useNotifications(user?.id);
+  const { favoriteProjectIds, removeFavorite } = useFavoritesDnd();
+  const { setNodeRef: setStarredDropRef, isOver: isOverStarred } = useDroppable({ id: SIDEBAR_STARRED_DROP_ID });
   const [teamsOpen, setTeamsOpen] = useState(true);
+  const [starredOpen, setStarredOpen] = useState(true);
   const [openTeamIds, setOpenTeamIds] = useState<Record<string, boolean>>({});
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -64,6 +69,10 @@ export function Sidebar() {
   }
 
   const untethered = projects.filter((p) => !p.team_id);
+  const starredProjects = useMemo(
+    () => projects.filter((p) => favoriteProjectIds.has(p.id)),
+    [projects, favoriteProjectIds]
+  );
 
   return (
     <>
@@ -117,6 +126,54 @@ export function Sidebar() {
             <NavLink href="/portfolios" icon={Sparkles} label="Portfolios" active={pathname.startsWith('/portfolios')} />
             <NavLink href="/goals" icon={Target} label="Goals" active={pathname.startsWith('/goals')} />
             <NavLink href="/people" icon={Users} label="People" active={pathname.startsWith('/people')} />
+          </div>
+
+          {/* Starred projects (drag a project card here, or use its star toggle) */}
+          <div className="mt-5">
+            <button
+              onClick={() => setStarredOpen((o) => !o)}
+              className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink-faint hover:text-ink-muted"
+            >
+              {starredOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+              <Star size={12} />
+              Starred
+            </button>
+            {starredOpen && (
+              <div
+                ref={setStarredDropRef}
+                className={cn(
+                  'mt-1 space-y-0.5 rounded-lg p-0.5 transition-colors',
+                  isOverStarred && 'bg-brand-50 ring-1 ring-inset ring-brand-200'
+                )}
+              >
+                {starredProjects.length === 0 && (
+                  <p className="px-2 py-2 text-xs leading-snug text-ink-faint">
+                    Drag a project here to pin it
+                  </p>
+                )}
+                {starredProjects.map((p) => (
+                  <div key={p.id} className="group flex items-center rounded-lg hover:bg-sidebar-hover">
+                    <Link
+                      href={`/projects/${p.id}`}
+                      className={cn(
+                        'flex flex-1 items-center gap-2 truncate rounded-lg px-2.5 py-[6px] text-[13px]',
+                        pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-ink' : 'text-sidebar-ink hover:text-ink'
+                      )}
+                    >
+                      <Hash size={13} style={{ color: p.color || '#F14545' }} />
+                      <span className="truncate">{p.name}</span>
+                    </Link>
+                    <button
+                      onClick={() => removeFavorite(p.id)}
+                      title="Unpin from sidebar"
+                      className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-ink-faint hover:bg-white hover:text-ink group-hover:flex"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Teams tree */}

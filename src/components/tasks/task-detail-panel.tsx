@@ -18,6 +18,7 @@ import { useTags } from '@/hooks/use-tags';
 import { useCustomFields } from '@/hooks/use-custom-fields';
 import { AssigneePicker, DatePickerButton, PriorityPicker, TagPicker } from '@/components/tasks/pickers';
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
+import { TaskAttachments } from '@/components/tasks/task-attachments';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -49,7 +50,7 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
   const router = useRouter();
   const { user, members } = useWorkspace();
   const {
-    task, comments, activity, customValues, dependencies, dependents, followers, likes, loading,
+    task, comments, activity, customValues, attachments, dependencies, dependents, followers, likes, loading,
     updateTask, addComment, toggleLike, toggleFollow, addTag, removeTag, setCustomFieldValue,
     addSubtask, addDependency, removeDependency,
   } = useTaskDetail(taskId);
@@ -298,6 +299,11 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
               className="flex-1 border-none bg-transparent p-0 text-sm text-ink outline-none placeholder:text-ink-faint"
             />
           </div>
+        </div>
+
+        {/* Attachments */}
+        <div className="mt-5 border-t border-border pt-4">
+          <TaskAttachments taskId={task.id} attachments={attachments} />
         </div>
 
         {/* Dependencies */}

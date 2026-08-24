@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   List, Kanban, Calendar as CalendarIcon, GanttChart, ChevronDown, Lock, Globe2,
-  Settings2, Plus, UserPlus, Loader2, Zap,
+  Settings2, Plus, UserPlus, Loader2, Zap, Info, BarChart3, MessageSquare, Paperclip,
 } from 'lucide-react';
 import { useProject } from '@/hooks/use-teams-projects';
 import { useCustomFields } from '@/hooks/use-custom-fields';
@@ -13,6 +13,9 @@ import { ListView } from '@/components/projects/list-view';
 import { BoardView } from '@/components/projects/board-view';
 import { CalendarView } from '@/components/projects/calendar-view';
 import { TimelineView } from '@/components/projects/timeline-view';
+import { ProjectOverview } from '@/components/projects/project-overview';
+import { ProjectFiles } from '@/components/projects/project-files';
+import { ProjectDashboard } from '@/components/projects/project-dashboard';
 import { CreateCustomFieldDialog } from '@/components/projects/create-custom-field-dialog';
 import { ProjectMembersPopover } from '@/components/projects/project-members-popover';
 import { AutomationRulesDialog } from '@/components/projects/automation-rules-dialog';
@@ -23,10 +26,14 @@ import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 const TABS = [
+  { key: 'overview', label: 'Overview', icon: Info },
   { key: 'list', label: 'List', icon: List },
   { key: 'board', label: 'Board', icon: Kanban },
   { key: 'timeline', label: 'Timeline', icon: GanttChart },
+  { key: 'dashboard', label: 'Dashboard', icon: BarChart3 },
   { key: 'calendar', label: 'Calendar', icon: CalendarIcon },
+  { key: 'messages', label: 'Messages', icon: MessageSquare },
+  { key: 'files', label: 'Files', icon: Paperclip },
 ] as const;
 
 export default function ProjectPage({ params }: { params: { projectId: string } }) {
@@ -166,10 +173,14 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
       </div>
 
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
-        {view === 'list' && <ListView projectId={project.id} />}
+        {view === 'overview' && <ProjectOverview project={project} onUpdate={updateProject} />}
+        {view === 'list' && <ListView projectId={project.id} onAddColumn={() => setFieldDialogOpen(true)} />}
         {view === 'board' && <BoardView projectId={project.id} />}
-        {view === 'calendar' && <CalendarView projectId={project.id} />}
         {view === 'timeline' && <TimelineView projectId={project.id} />}
+        {view === 'dashboard' && <ProjectDashboard projectId={project.id} />}
+        {view === 'calendar' && <CalendarView projectId={project.id} />}
+        {view === 'messages' && <MessagesComingSoon />}
+        {view === 'files' && <ProjectFiles projectId={project.id} />}
       </div>
 
       <CreateCustomFieldDialog
@@ -178,6 +189,18 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
         onCreate={(name, type, options) => (workspace ? createField(workspace.id, name, type, options) : Promise.resolve(null))}
       />
       <AutomationRulesDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} projectId={project.id} />
+    </div>
+  );
+}
+
+function MessagesComingSoon() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+      <MessageSquare size={28} className="mb-3 text-ink-faint" />
+      <p className="text-sm font-medium text-ink">Messages coming soon</p>
+      <p className="mt-1 max-w-xs text-[13px] text-ink-faint">
+        Project-level conversations aren&apos;t available yet. Use task comments in the meantime.
+      </p>
     </div>
   );
 }
