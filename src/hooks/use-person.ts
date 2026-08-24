@@ -6,7 +6,10 @@ import type { Tables } from '@/types/database';
 
 export type PersonProfile = Tables<'profiles'>;
 export type PersonProject = Tables<'projects'>;
-export type PersonTask = Tables<'tasks'>;
+export interface PersonTask extends Tables<'tasks'> {
+  tags: Tables<'tags'>[];
+  project: Tables<'projects'> | null;
+}
 
 export function usePersonProfile(userId: string | undefined, workspaceId: string | undefined) {
   const supabase = useMemo(() => createClient(), []);
@@ -24,7 +27,7 @@ export function usePersonProfile(userId: string | undefined, workspaceId: string
       supabase.from('profiles').select('*').eq('id', userId).single(),
       supabase
         .from('tasks')
-        .select('*')
+        .select('*, task_tags(tag:tags(*))')
         .eq('assignee_id', userId)
         .eq('workspace_id', workspaceId)
         .eq('completed', false)
@@ -34,7 +37,13 @@ export function usePersonProfile(userId: string | undefined, workspaceId: string
     ]);
 
     setProfile(profileRes.data);
-    setTasks(tasksRes.data || []);
+    setTasks(
+      (tasksRes.data || []).map((row: any) => ({
+        ...row,
+        tags: (row.task_tags || []).map((t: any) => t.tag).filter(Boolean),
+        project: null,
+      }))
+    );
 
     const projectIds = (memberRowsRes.data || []).map((r) => r.project_id);
     if (projectIds.length > 0) {

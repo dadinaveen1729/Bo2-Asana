@@ -11,10 +11,18 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { ProjectTask } from '@/hooks/use-tasks';
 
-export function TaskRow({ task, onToggleComplete }: { task: ProjectTask; onToggleComplete: (v: boolean) => void }) {
+export function TaskRow({
+  task,
+  onToggleComplete,
+  dragDisabled = false,
+}: {
+  task: ProjectTask;
+  onToggleComplete: (v: boolean) => void;
+  dragDisabled?: boolean;
+}) {
   const { openTask } = useTaskPanel();
   const supabase = createClient();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id, disabled: dragDisabled });
 
   async function updateTask(patch: Record<string, unknown>) {
     const { error } = await supabase.from('tasks').update(patch).eq('id', task.id);
@@ -29,7 +37,10 @@ export function TaskRow({ task, onToggleComplete }: { task: ProjectTask; onToggl
       style={style}
       className="group flex items-center gap-2 border-b border-border px-3 py-2 hover:bg-surface-hover"
     >
-      <button {...attributes} {...listeners} className="cursor-grab text-ink-faint opacity-0 group-hover:opacity-100">
+      <button
+        {...(dragDisabled ? {} : { ...attributes, ...listeners })}
+        className={cn('text-ink-faint', dragDisabled ? 'invisible' : 'cursor-grab opacity-0 group-hover:opacity-100')}
+      >
         <GripVertical size={14} />
       </button>
       <Checkbox checked={task.completed} onCheckedChange={(v) => onToggleComplete(!!v)} />
@@ -39,7 +50,7 @@ export function TaskRow({ task, onToggleComplete }: { task: ProjectTask; onToggl
         </span>
       </button>
       <div className="flex shrink-0 items-center gap-1.5">
-        {task.tags.slice(0, 2).map((t) => (
+        {(task.tags ?? []).slice(0, 2).map((t) => (
           <span key={t.id} className="rounded-md px-1.5 py-0.5 text-[10px] font-medium" style={{ backgroundColor: t.color + '22', color: t.color }}>
             {t.name}
           </span>

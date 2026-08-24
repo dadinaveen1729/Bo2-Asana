@@ -75,7 +75,7 @@ export default function PersonProfilePage({ params }: { params: { userId: string
               <h2 className="text-sm font-semibold text-ink">{isSelf ? 'My tasks' : 'Tasks'}</h2>
             </div>
             {tasks.length > 0 ? (
-              tasks.map((t) => <SimpleTaskRow key={t.id} task={t as any} showProject={false} />)
+              tasks.map((t) => <SimpleTaskRow key={t.id} task={t} showProject={false} />)
             ) : (
               <p className="px-4 py-8 text-center text-sm text-ink-muted">No open tasks assigned.</p>
             )}

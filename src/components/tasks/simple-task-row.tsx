@@ -30,13 +30,13 @@ export function SimpleTaskRow({ task, showProject = true }: { task: MyTask; show
           {task.project.name}
         </span>
       )}
-      {task.tags.slice(0, 2).map((t) => (
+      {(task.tags ?? []).slice(0, 2).map((t) => (
         <span key={t.id} className="hidden shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium sm:inline-block" style={{ backgroundColor: t.color + '22', color: t.color }}>
           {t.name}
         </span>
       ))}
-      <PriorityPicker priority={task.priority} onChange={(p) => updateTask({ priority: p })} />
-      <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} />
+      <span className="shrink-0"><PriorityPicker priority={task.priority} onChange={(p) => updateTask({ priority: p })} /></span>
+      <span className="shrink-0"><DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} /></span>
     </div>
   );
 }

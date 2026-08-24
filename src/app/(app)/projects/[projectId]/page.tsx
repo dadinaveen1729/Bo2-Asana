@@ -193,6 +193,10 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
   );
 }
 
+// TODO: Project-level messaging needs new backend infrastructure (a project_messages
+// table, realtime channel, participant/read-state tracking) that doesn't exist yet —
+// out of scope for a UI-only pass. Task comments (see task-detail-panel.tsx /
+// use-task-detail.ts) already cover per-task discussion in the meantime.
 function MessagesComingSoon() {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">

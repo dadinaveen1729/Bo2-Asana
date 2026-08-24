@@ -31,7 +31,10 @@ const config: Config = {
         'ink-faint': 'hsl(var(--ink-faint))',
         sidebar: 'hsl(var(--sidebar))',
         'sidebar-ink': 'hsl(var(--sidebar-ink))',
+        'sidebar-ink-strong': 'hsl(var(--sidebar-ink-strong))',
+        'sidebar-ink-faint': 'hsl(var(--sidebar-ink-faint))',
         'sidebar-hover': 'hsl(var(--sidebar-hover))',
+        'sidebar-border': 'hsl(var(--sidebar-border))',
       },
       borderRadius: {
         xl: '0.875rem',

@@ -30,10 +30,10 @@ function NavLink({ href, icon: Icon, label, badge, active }: { href: string; ico
       href={href}
       className={cn(
         'group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13.5px] font-medium transition-colors',
-        active ? 'bg-sidebar-hover text-ink' : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-ink'
+        active ? 'bg-sidebar-hover text-sidebar-ink-strong' : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-sidebar-ink-strong'
       )}
     >
-      <Icon size={16.5} strokeWidth={2} className={active ? 'text-brand-500' : 'text-ink-faint group-hover:text-ink-muted'} />
+      <Icon size={16.5} strokeWidth={2} className={active ? 'text-brand-500' : 'text-sidebar-ink-faint group-hover:text-sidebar-ink'} />
       <span className="flex-1 truncate">{label}</span>
       {!!badge && (
         <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
@@ -76,7 +76,7 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-border bg-sidebar">
+      <aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
         {/* Workspace switcher */}
         <div className="flex items-center gap-2 px-3.5 py-3.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 text-white">
@@ -84,7 +84,7 @@ export function Sidebar() {
               <path d="M4 12L10 18L20 6" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="truncate text-[14px] font-semibold text-ink">{workspace?.name || 'BoostFlow'}</span>
+          <span className="truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'BoostFlow'}</span>
         </div>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-2.5 pb-4">
@@ -132,7 +132,7 @@ export function Sidebar() {
           <div className="mt-5">
             <button
               onClick={() => setStarredOpen((o) => !o)}
-              className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink-faint hover:text-ink-muted"
+              className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-sidebar-ink-faint hover:text-sidebar-ink"
             >
               {starredOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               <Star size={12} />
@@ -147,7 +147,7 @@ export function Sidebar() {
                 )}
               >
                 {starredProjects.length === 0 && (
-                  <p className="px-2 py-2 text-xs leading-snug text-ink-faint">
+                  <p className="px-2 py-2 text-xs leading-snug text-sidebar-ink-faint">
                     Drag a project here to pin it
                   </p>
                 )}
@@ -157,7 +157,7 @@ export function Sidebar() {
                       href={`/projects/${p.id}`}
                       className={cn(
                         'flex flex-1 items-center gap-2 truncate rounded-lg px-2.5 py-[6px] text-[13px]',
-                        pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-ink' : 'text-sidebar-ink hover:text-ink'
+                        pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-sidebar-ink-strong' : 'text-sidebar-ink hover:text-sidebar-ink-strong'
                       )}
                     >
                       <Hash size={13} style={{ color: p.color || '#F14545' }} />
@@ -166,7 +166,7 @@ export function Sidebar() {
                     <button
                       onClick={() => removeFavorite(p.id)}
                       title="Unpin from sidebar"
-                      className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-ink-faint hover:bg-white hover:text-ink group-hover:flex"
+                      className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-sidebar-ink-faint hover:bg-sidebar-hover hover:text-sidebar-ink-strong group-hover:flex"
                     >
                       <X size={12} />
                     </button>
@@ -180,7 +180,7 @@ export function Sidebar() {
           <div className="mt-5">
             <button
               onClick={() => setTeamsOpen((o) => !o)}
-              className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink-faint hover:text-ink-muted"
+              className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-sidebar-ink-faint hover:text-sidebar-ink"
             >
               {teamsOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               Teams
@@ -195,7 +195,7 @@ export function Sidebar() {
                       <div className="group flex items-center rounded-lg hover:bg-sidebar-hover">
                         <button
                           onClick={() => setOpenTeamIds((s) => ({ ...s, [team.id]: !open }))}
-                          className="flex h-6 w-6 shrink-0 items-center justify-center text-ink-faint"
+                          className="flex h-6 w-6 shrink-0 items-center justify-center text-sidebar-ink-faint"
                         >
                           {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                         </button>
@@ -203,7 +203,7 @@ export function Sidebar() {
                           href={`/teams/${team.id}`}
                           className={cn(
                             'flex flex-1 items-center gap-2 truncate py-[7px] pr-2 text-[13.5px] font-medium',
-                            pathname === `/teams/${team.id}` ? 'text-ink' : 'text-sidebar-ink'
+                            pathname === `/teams/${team.id}` ? 'text-sidebar-ink-strong' : 'text-sidebar-ink'
                           )}
                         >
                           <span
@@ -216,15 +216,15 @@ export function Sidebar() {
                         </Link>
                         <button
                           onClick={() => router.push(`/projects/new?team=${team.id}`)}
-                          className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-ink-faint hover:bg-white hover:text-ink group-hover:flex"
+                          className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-sidebar-ink-faint hover:bg-sidebar-hover hover:text-sidebar-ink-strong group-hover:flex"
                         >
                           <Plus size={13} />
                         </button>
                       </div>
                       {open && (
-                        <div className="ml-6 space-y-0.5 border-l border-border pl-2">
+                        <div className="ml-6 space-y-0.5 border-l border-sidebar-border pl-2">
                           {teamProjects.length === 0 && (
-                            <p className="py-1 pl-2 text-xs text-ink-faint">No projects yet</p>
+                            <p className="py-1 pl-2 text-xs text-sidebar-ink-faint">No projects yet</p>
                           )}
                           {teamProjects.map((p) => (
                             <Link
@@ -232,7 +232,7 @@ export function Sidebar() {
                               href={`/projects/${p.id}`}
                               className={cn(
                                 'flex items-center gap-2 truncate rounded-lg px-2 py-[6px] text-[13px]',
-                                pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-ink' : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-ink'
+                                pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-sidebar-ink-strong' : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-sidebar-ink-strong'
                               )}
                             >
                               <Hash size={13} style={{ color: p.color || '#F14545' }} />
@@ -251,7 +251,7 @@ export function Sidebar() {
           {/* Projects without a team */}
           {untethered.length > 0 && (
             <div className="mt-5">
-              <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Projects</p>
+              <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-sidebar-ink-faint">Projects</p>
               <div className="space-y-0.5">
                 {untethered.map((p) => (
                   <Link
@@ -259,7 +259,7 @@ export function Sidebar() {
                     href={`/projects/${p.id}`}
                     className={cn(
                       'flex items-center gap-2 truncate rounded-lg px-2.5 py-[6px] text-[13px]',
-                      pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-ink' : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-ink'
+                      pathname.startsWith(`/projects/${p.id}`) ? 'bg-sidebar-hover text-sidebar-ink-strong' : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-sidebar-ink-strong'
                     )}
                   >
                     <Hash size={13} style={{ color: p.color || '#F14545' }} />
@@ -272,14 +272,14 @@ export function Sidebar() {
         </div>
 
         {/* User menu */}
-        <div className="border-t border-border p-2.5">
+        <div className="border-t border-sidebar-border p-2.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-sidebar-hover">
                 <Avatar name={profile?.full_name} email={profile?.email} color={profile?.avatar_color} src={profile?.avatar_url} size={28} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold text-ink">{profile?.full_name || profile?.email}</p>
-                  <p className="truncate text-[11px] capitalize text-ink-faint">{role}</p>
+                  <p className="truncate text-[13px] font-semibold text-sidebar-ink-strong">{profile?.full_name || profile?.email}</p>
+                  <p className="truncate text-[11px] capitalize text-sidebar-ink-faint">{role}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
