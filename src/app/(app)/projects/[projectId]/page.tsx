@@ -20,6 +20,7 @@ import { Avatar, AvatarStack } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { PROJECT_STATUS_META, cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 const TABS = [
   { key: 'list', label: 'List', icon: List },
@@ -63,6 +64,11 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
   const statusMeta = PROJECT_STATUS_META[project.status];
   const supabase = createClient();
 
+  async function updateProject(patch: Record<string, unknown>) {
+    const { error } = await supabase.from('projects').update(patch).eq('id', project!.id);
+    if (error) toast.error(error.message);
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-6 pt-4">
@@ -98,7 +104,7 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {Object.entries(PROJECT_STATUS_META).map(([key, m]) => (
-                <DropdownMenuItem key={key} onSelect={() => supabase.from('projects').update({ status: key as any }).eq('id', project.id)}>
+                <DropdownMenuItem key={key} onSelect={() => updateProject({ status: key })}>
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: m.color }} /> {m.label}
                 </DropdownMenuItem>
               ))}
@@ -127,14 +133,14 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onSelect={() => supabase.from('projects').update({ privacy: project.privacy === 'public' ? 'private' : 'public' }).eq('id', project.id)}
+                  onSelect={() => updateProject({ privacy: project.privacy === 'public' ? 'private' : 'public' })}
                 >
                   {project.privacy === 'public' ? <Lock size={14} /> : <Globe2 size={14} />}
                   Make {project.privacy === 'public' ? 'private' : 'team-wide'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-600 data-[highlighted]:bg-red-50"
-                  onSelect={() => supabase.from('projects').update({ archived: true }).eq('id', project.id)}
+                  onSelect={() => { updateProject({ archived: true }); router.push('/projects'); }}
                 >
                   Archive project
                 </DropdownMenuItem>

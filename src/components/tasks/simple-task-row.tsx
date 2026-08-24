@@ -6,15 +6,21 @@ import { DatePickerButton, PriorityPicker } from '@/components/tasks/pickers';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { Hash } from 'lucide-react';
+import { toast } from 'sonner';
 import type { MyTask } from '@/hooks/use-my-tasks';
 
 export function SimpleTaskRow({ task, showProject = true }: { task: MyTask; showProject?: boolean }) {
   const { openTask } = useTaskPanel();
   const supabase = createClient();
 
+  async function updateTask(patch: Record<string, unknown>) {
+    const { error } = await supabase.from('tasks').update(patch).eq('id', task.id);
+    if (error) toast.error(error.message);
+  }
+
   return (
     <div className="group flex items-center gap-2.5 border-b border-border px-3 py-2 hover:bg-surface-hover">
-      <Checkbox checked={task.completed} onCheckedChange={(v) => supabase.from('tasks').update({ completed: !!v }).eq('id', task.id)} />
+      <Checkbox checked={task.completed} onCheckedChange={(v) => updateTask({ completed: !!v })} />
       <button onClick={() => openTask(task.id)} className="min-w-0 flex-1 text-left">
         <span className={cn('truncate text-[13.5px]', task.completed ? 'text-ink-faint line-through' : 'text-ink')}>{task.name}</span>
       </button>
@@ -29,8 +35,8 @@ export function SimpleTaskRow({ task, showProject = true }: { task: MyTask; show
           {t.name}
         </span>
       ))}
-      <PriorityPicker priority={task.priority} onChange={(p) => supabase.from('tasks').update({ priority: p as any }).eq('id', task.id)} />
-      <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => supabase.from('tasks').update({ due_date: d }).eq('id', task.id)} />
+      <PriorityPicker priority={task.priority} onChange={(p) => updateTask({ priority: p })} />
+      <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} />
     </div>
   );
 }

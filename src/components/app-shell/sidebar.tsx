@@ -249,6 +249,8 @@ export function Sidebar() {
               <DropdownMenuItem onSelect={handleSignOut} className="text-red-600 data-[highlighted]:bg-red-50">
                 <LogOut size={15} /> Sign out
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <p className="px-2.5 py-1 text-[11px] text-ink-faint">Built by Naveen Dadi</p>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

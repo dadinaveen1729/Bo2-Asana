@@ -8,12 +8,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AssigneePicker, DatePickerButton, PriorityPicker } from '@/components/tasks/pickers';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { ProjectTask } from '@/hooks/use-tasks';
 
 export function TaskRow({ task, onToggleComplete }: { task: ProjectTask; onToggleComplete: (v: boolean) => void }) {
   const { openTask } = useTaskPanel();
   const supabase = createClient();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+
+  async function updateTask(patch: Record<string, unknown>) {
+    const { error } = await supabase.from('tasks').update(patch).eq('id', task.id);
+    if (error) toast.error(error.message);
+  }
 
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
@@ -38,10 +44,10 @@ export function TaskRow({ task, onToggleComplete }: { task: ProjectTask; onToggl
             {t.name}
           </span>
         ))}
-        <PriorityPicker priority={task.priority} onChange={(p) => supabase.from('tasks').update({ priority: p as any }).eq('id', task.id)} />
-        <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => supabase.from('tasks').update({ due_date: d }).eq('id', task.id)} />
+        <PriorityPicker priority={task.priority} onChange={(p) => updateTask({ priority: p })} />
+        <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} />
       </div>
-      <AssigneePicker assignee={task.assignee} onChange={(id) => supabase.from('tasks').update({ assignee_id: id }).eq('id', task.id)} size={24} />
+      <AssigneePicker assignee={task.assignee} onChange={(id) => updateTask({ assignee_id: id })} size={24} />
     </div>
   );
 }
