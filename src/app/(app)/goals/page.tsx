@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, Plus, Target } from 'lucide-react';
@@ -19,6 +19,14 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
 };
 
 export default function GoalsPage() {
+  return (
+    <Suspense fallback={null}>
+      <GoalsPageInner />
+    </Suspense>
+  );
+}
+
+function GoalsPageInner() {
   const { workspace, user } = useWorkspace();
   const { goals, loading, createGoal } = useGoals(workspace?.id);
   const searchParams = useSearchParams();

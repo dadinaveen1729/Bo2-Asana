@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   List, Kanban, Calendar as CalendarIcon, GanttChart, ChevronDown, Lock, Globe2,
@@ -29,6 +29,14 @@ const TABS = [
 ] as const;
 
 export default function ProjectPage({ params }: { params: { projectId: string } }) {
+  return (
+    <Suspense fallback={null}>
+      <ProjectPageInner params={params} />
+    </Suspense>
+  );
+}
+
+function ProjectPageInner({ params }: { params: { projectId: string } }) {
   const { project, loading } = useProject(params.projectId);
   const { fields, createField } = useCustomFields(params.projectId);
   const { workspace } = useWorkspace();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, Plus, Sparkles } from 'lucide-react';
@@ -11,6 +11,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AvatarStack } from '@/components/ui/avatar';
 
 export default function PortfoliosPage() {
+  return (
+    <Suspense fallback={null}>
+      <PortfoliosPageInner />
+    </Suspense>
+  );
+}
+
+function PortfoliosPageInner() {
   const { workspace, user } = useWorkspace();
   const { portfolios, loading, createPortfolio } = usePortfolios(workspace?.id);
   const searchParams = useSearchParams();
