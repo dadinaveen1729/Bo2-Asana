@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useWorkspace } from '@/lib/workspace-context';
 import { notifyMentions } from '@/lib/mentions';
 import { Avatar, AvatarStack } from '@/components/ui/avatar';
+import { MentionTextarea } from '@/components/ui/mention-textarea';
 import { DatePickerButton } from '@/components/tasks/pickers';
 import { PROJECT_STATUS_META } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -160,9 +161,11 @@ export function ProjectOverview({
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_260px]">
         <div className="min-w-0">
           <p className="mb-1.5 text-[13px] font-semibold text-ink-faint">Description</p>
-          <textarea
+          <MentionTextarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={setDescription}
+            members={members}
+            excludeUserId={user?.id}
             onBlur={saveDescription}
             rows={4}
             placeholder="What is this project about?"

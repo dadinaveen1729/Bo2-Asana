@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MentionTextarea } from '@/components/ui/mention-textarea';
 import { useWorkspace } from '@/lib/workspace-context';
 import { useTaskPanel } from '@/lib/task-panel-context';
 import { useTaskDetail } from '@/hooks/use-task-detail';
@@ -282,10 +283,12 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
         </div>
 
         <div className="mt-5 border-t border-border pt-4">
-          <textarea
+          <MentionTextarea
             ref={notesRef}
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={setNotes}
+            members={members}
+            excludeUserId={user?.id}
             onBlur={() => {
               if (notes === (task.notes || '')) return;
               updateTask({ notes: notes || null });
@@ -441,9 +444,12 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
 
       <div className="border-t border-border p-3">
         <div className="flex items-end gap-2 rounded-xl border border-border bg-white px-3 py-2 focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-100">
-          <textarea
+          <MentionTextarea
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={setComment}
+            members={members}
+            excludeUserId={user?.id}
+            wrapperClassName="relative flex-1"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -452,7 +458,7 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
             }}
             placeholder="Leave a comment..."
             rows={1}
-            className="max-h-32 flex-1 resize-none border-none bg-transparent p-0 text-sm text-ink outline-none placeholder:text-ink-faint"
+            className="max-h-32 w-full resize-none border-none bg-transparent p-0 text-sm text-ink outline-none placeholder:text-ink-faint"
           />
           <button
             onClick={handleComment}

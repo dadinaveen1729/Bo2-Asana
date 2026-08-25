@@ -3,16 +3,24 @@ import type { Tables } from '@/types/database';
 
 type Profile = Tables<'profiles'>;
 
-// Plain-text "@Full Name" / "@email" detection against workspace members.
-// No live autocomplete-while-typing yet — this matches whatever was
-// actually typed once the surrounding text is saved/posted.
+function escapeRegex(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Plain-text "@..." detection against workspace members. The mention
+// autocomplete (MentionTextarea) always inserts the full name, but this
+// also has to handle whatever someone types by hand without it — so it
+// matches on the full name, its first word, the email's local-part, and
+// the full email, each requiring a word boundary right after (so "@ed"
+// doesn't false-match inside "@edited"). Case-insensitive throughout.
 export function extractMentions(text: string, members: Profile[], excludeUserId: string): Profile[] {
-  const lower = text.toLowerCase();
   return members.filter((m) => {
     if (m.id === excludeUserId) return false;
-    const byName = m.full_name && lower.includes('@' + m.full_name.toLowerCase());
-    const byEmail = lower.includes('@' + m.email.toLowerCase());
-    return byName || byEmail;
+    const fullName = (m.full_name || '').trim();
+    const firstName = fullName.split(/\s+/)[0] || '';
+    const emailLocal = m.email.split('@')[0];
+    const candidates = Array.from(new Set([fullName, firstName, emailLocal, m.email].filter((c) => c && c.length > 1)));
+    return candidates.some((c) => new RegExp('@' + escapeRegex(c) + '(?![a-z0-9])', 'i').test(text));
   });
 }
 
