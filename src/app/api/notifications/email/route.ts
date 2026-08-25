@@ -9,7 +9,7 @@ const SUBJECT_BY_TYPE: Record<string, (actor: string) => string> = {
   comment: (a) => `${a} commented on your task`,
   added_to_project: (a) => `${a} added you to a project`,
   dependency_cleared: () => 'A task you were waiting on is done',
-  invited: (a) => `${a} invited you to BoostFlow`,
+  invited: (a) => `${a} invited you to Boost Hub`,
 };
 
 export async function POST(req: Request) {
@@ -31,10 +31,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email is not configured (missing BREVO_SMTP_USER/BREVO_SMTP_PASSWORD).' }, { status: 500 });
   }
 
-  const subjectFn = SUBJECT_BY_TYPE[type] || (() => 'You have a new update in BoostFlow');
+  const subjectFn = SUBJECT_BY_TYPE[type] || (() => 'You have a new update in Boost Hub');
   const subject = subjectFn(actorName || 'Someone');
   const link = type === 'invited' ? `${APP_URL}/signup` : taskId ? `${APP_URL}/tasks/${taskId}` : APP_URL;
-  const cta = type === 'invited' ? 'Create your account' : 'Open in BoostFlow';
+  const cta = type === 'invited' ? 'Create your account' : 'Open in Boost Hub';
 
   try {
     const transporter = nodemailer.createTransport({ host, port, secure: false, auth: { user, pass } });
@@ -44,10 +44,10 @@ export async function POST(req: Request) {
       // "sent" from our side) but nothing is actually delivered. The only
       // sender verified on this Brevo account is boostoxygen30@gmail.com;
       // notifications@boostoxygen.com was never added/verified there.
-      from: '"BoostFlow" <boostoxygen30@gmail.com>',
+      from: '"Boost Hub" <boostoxygen30@gmail.com>',
       to: recipientEmail,
       subject,
-      text: `Hi ${recipientName || ''},\n\n${subject}.\n\n${message || ''}\n\nOpen it: ${link}\n\n— BoostFlow`,
+      text: `Hi ${recipientName || ''},\n\n${subject}.\n\n${message || ''}\n\nOpen it: ${link}\n\n— Boost Hub`,
       html: `
         <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
           <p style="font-size: 15px; color: #101828;">Hi ${recipientName || ''},</p>

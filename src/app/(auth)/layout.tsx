@@ -23,12 +23,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <path d="M4 12L10 18L20 6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="text-lg font-semibold tracking-tight text-white">BoostFlow</span>
+          <span className="text-lg font-semibold tracking-tight text-white">Boost Hub</span>
         </div>
         <div className="animate-slide-up rounded-2xl border border-white/10 bg-white p-8 shadow-2xl">
           {children}
         </div>
-        <p className="mt-6 text-center text-xs text-white/40">Internal work management for Boost Oxygen</p>
+        <p className="mt-6 text-center text-xs text-white/40">Internal work management for Boost Oxygen — now with 100% more oxygen.</p>
+        <p className="mt-2 text-center text-xs text-white/30">
+          Developed by{' '}
+          <a
+            href="https://americanprimellc.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-white/50 hover:text-white/80"
+          >
+            American Prime LLC
+          </a>
+        </p>
       </div>
     </div>
   );

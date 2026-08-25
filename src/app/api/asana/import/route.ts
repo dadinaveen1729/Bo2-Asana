@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       listTasks(token, project.gid),
     ]);
 
-    // Match Asana assignee emails to existing BoostFlow profiles in this workspace.
+    // Match Asana assignee emails to existing Boost Hub profiles in this workspace.
     const { data: memberRows } = await supabase
       .from('workspace_members')
       .select('user_id, profiles(email)')

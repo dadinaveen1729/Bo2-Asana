@@ -191,7 +191,7 @@ export default function InboxPage() {
           )}
 
           <div className="overflow-hidden rounded-xl border border-border">
-            {renderFeed(notifications, 'No notifications yet.')}
+            {renderFeed(notifications, 'No notifications yet. Enjoy the quiet while it lasts.')}
           </div>
         </TabsContent>
 
@@ -200,7 +200,7 @@ export default function InboxPage() {
             {bookmarked.length === 0 ? (
               <div className="px-4 py-16 text-center">
                 <Bookmark className="mx-auto mb-2 text-ink-faint" size={20} />
-                <p className="text-sm text-ink-muted">No bookmarks yet. Hover a notification and click the bookmark icon to save it here.</p>
+                <p className="text-sm text-ink-muted">No bookmarks yet — save one for a rainy day. Hover a notification and click the bookmark icon.</p>
               </div>
             ) : (
               renderFeed(bookmarked, 'No bookmarks yet.')
@@ -213,7 +213,7 @@ export default function InboxPage() {
             {archived.length === 0 ? (
               <div className="px-4 py-16 text-center">
                 <ArchiveIcon className="mx-auto mb-2 text-ink-faint" size={20} />
-                <p className="text-sm text-ink-muted">Nothing archived yet.</p>
+                <p className="text-sm text-ink-muted">Nothing archived yet. Squeaky clean inbox — we love to see it.</p>
               </div>
             ) : (
               renderFeed(archived, 'Nothing archived yet.')
@@ -223,7 +223,7 @@ export default function InboxPage() {
 
         <TabsContent value="mentioned" className="mt-4">
           <div className="overflow-hidden rounded-xl border border-border">
-            {renderFeed(mentioned, "No mentions yet. When someone @mentions you, it'll show up here.")}
+            {renderFeed(mentioned, "No mentions yet. Nobody's tagged you in anything — yet.")}
           </div>
         </TabsContent>
       </Tabs>

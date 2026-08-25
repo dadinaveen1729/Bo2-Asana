@@ -222,7 +222,7 @@ export default function SpreadsheetImportPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <h1 className="text-2xl font-semibold text-ink">Import from spreadsheet</h1>
-      <p className="mt-1 text-sm text-ink-muted">Upload a CSV or Excel file and BoostFlow will build a project from its rows.</p>
+      <p className="mt-1 text-sm text-ink-muted">Upload a CSV or Excel file and Boost Hub will build a project from its rows.</p>
 
       {step === 'upload' && (
         <div className="mt-6 space-y-4">

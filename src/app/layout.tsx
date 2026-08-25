@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'BoostFlow',
+  title: 'Boost Hub',
   description: 'Work management for Boost Oxygen',
 };
 

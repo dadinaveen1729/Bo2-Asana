@@ -106,7 +106,7 @@ export function Sidebar() {
               <path d="M4 12L10 18L20 6" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="flex-1 block truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'BoostFlow'}</span>
+          <span className="flex-1 block truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'Boost Hub'}</span>
           <button
             onClick={() => setMobileOpen(false)}
             className="rounded-md p-1 text-sidebar-ink-faint hover:bg-sidebar-hover hover:text-sidebar-ink-strong lg:hidden"

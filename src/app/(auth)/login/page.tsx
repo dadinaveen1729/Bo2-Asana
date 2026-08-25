@@ -41,7 +41,7 @@ function LoginForm() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Welcome back</h1>
-      <p className="mt-1 text-sm text-ink-muted">Sign in with your Boost Oxygen account.</p>
+      <p className="mt-1 text-sm text-ink-muted">Sign in with your Boost Oxygen account. Deep breath — you've got this.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -97,7 +97,7 @@ function LoginForm() {
       </form>
 
       <p className="mt-6 text-center text-sm text-ink-muted">
-        New to BoostFlow?{' '}
+        New to Boost Hub?{' '}
         <Link href="/signup" className="font-semibold text-brand-600 hover:text-brand-700">
           Create an account
         </Link>

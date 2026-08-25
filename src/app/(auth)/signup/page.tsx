@@ -53,7 +53,7 @@ export default function SignupPage() {
         <h1 className="text-xl font-semibold text-ink">Check your inbox</h1>
         <p className="mt-2 text-sm text-ink-muted">
           We sent a confirmation link to <span className="font-medium text-ink">{email}</span>. Click it to
-          activate your account and join the Boost Oxygen workspace.
+          activate your account and join the Boost Oxygen workspace. One click and you're in — no oxygen mask required.
         </p>
         <Link
           href="/login"
@@ -68,7 +68,7 @@ export default function SignupPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Create your account</h1>
-      <p className="mt-1 text-sm text-ink-muted">Use your @boostoxygen.com email to join the team workspace.</p>
+      <p className="mt-1 text-sm text-ink-muted">Use your @boostoxygen.com email to join the team workspace. Takes less time than a coffee break.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>

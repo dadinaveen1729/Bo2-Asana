@@ -86,7 +86,7 @@ function TemplateGallery() {
         <h1 className="text-[22px] font-semibold text-ink">Template gallery</h1>
         <div className="flex items-center gap-2">
           <a
-            href="mailto:naveen@boostoxygen.com?subject=BoostFlow%20feedback"
+            href="mailto:naveen@boostoxygen.com?subject=Boost%20Hub%20feedback"
             className="hidden text-sm font-medium text-brand-600 hover:text-brand-700 sm:inline"
           >
             Send feedback

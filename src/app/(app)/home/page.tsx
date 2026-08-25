@@ -33,6 +33,24 @@ function greeting(now: Date) {
   return 'Good evening';
 }
 
+// A rotating, lightly Boost-Oxygen-themed one-liner under the greeting —
+// picked off the date so it's stable for the whole day and identical across
+// re-renders (no Math.random(), no hydration mismatch).
+const DAILY_LINES = [
+  "Let's turn today's to-dos into ta-das.",
+  'Fresh air, fresh start.',
+  'Inhale focus, exhale busywork.',
+  'Small steps. Big oxygen tanks.',
+  "Today's forecast: a high chance of getting things done.",
+  'Breathe in. Ship it out.',
+  'Your tasks are waiting. Coffee first is still allowed.',
+];
+
+function dailyLine(now: Date) {
+  const dayIndex = Math.floor(now.getTime() / 86400000);
+  return DAILY_LINES[dayIndex % DAILY_LINES.length];
+}
+
 function taskDueTime(t: MyTask) {
   return t.due_date ? new Date(t.due_date + 'T00:00:00').getTime() : Infinity;
 }
@@ -54,7 +72,7 @@ const HOME_SECTION_LABELS: Record<HomeSectionKey, string> = {
   my_tasks: 'My tasks',
   projects: 'Projects',
   people: 'People',
-  learn: 'Learn BoostFlow',
+  learn: 'Learn Boost Hub',
 };
 
 const DEFAULT_HOME_LAYOUT: HomeLayoutSection[] = [
@@ -89,7 +107,7 @@ function loadHomeLayout(userId: string): HomeLayoutSection[] {
 }
 
 // ---------------------------------------------------------------------------
-// Learn BoostFlow — real, accurate walkthroughs of this app's actual UI.
+// Learn Boost Hub — real, accurate walkthroughs of this app's actual UI.
 // ---------------------------------------------------------------------------
 
 const LEARN_CARDS = [
@@ -99,7 +117,7 @@ const LEARN_CARDS = [
     color: '#6C5CE7',
     duration: '3 min',
     title: 'Getting started',
-    description: 'Learn the basics and see how BoostFlow helps you get work done.',
+    description: 'Learn the basics and see how Boost Hub helps you get work done.',
   },
   {
     key: 'productivity',
@@ -501,7 +519,7 @@ export default function HomePage() {
   function renderLearn() {
     return (
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-ink">Learn BoostFlow</h2>
+        <h2 className="mb-3 text-sm font-semibold text-ink">Learn Boost Hub</h2>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {LEARN_CARDS.map((c) => (
             <button
@@ -528,6 +546,7 @@ export default function HomePage() {
         <div>
           <p className="text-sm text-ink-muted">{now ? format(now, 'EEEE, MMMM d') : ' '}</p>
           <h1 className="mt-1 text-[26px] font-semibold text-ink">{now ? greeting(now) : 'Welcome'}, {firstName}</h1>
+          {now && <p className="mt-1 text-sm text-ink-faint">{dailyLine(now)}</p>}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 pt-1">

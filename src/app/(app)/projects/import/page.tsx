@@ -117,7 +117,7 @@ export default function ImportProjectsPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <h1 className="text-2xl font-semibold text-ink">Import from Asana</h1>
-      <p className="mt-1 text-sm text-ink-muted">Bring your team's existing Asana projects, sections, and tasks into BoostFlow.</p>
+      <p className="mt-1 text-sm text-ink-muted">Bring your team's existing Asana projects, sections, and tasks into Boost Hub.</p>
 
       {step === 'token' && (
         <div className="mt-6 space-y-4">
