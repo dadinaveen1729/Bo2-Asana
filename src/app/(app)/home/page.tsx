@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -278,7 +278,7 @@ function HomeProjectCard({
         >
           <Hash size={15} style={{ color: project.color || '#FC636B' }} />
         </span>
-        <span className="truncate text-sm font-semibold text-ink">{project.name}</span>
+        <span className="block truncate text-sm font-semibold text-ink">{project.name}</span>
       </div>
       <span
         className="mt-3 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold"

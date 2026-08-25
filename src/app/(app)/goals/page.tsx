@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
@@ -69,7 +69,7 @@ function GoalsPageInner() {
             return (
               <Link key={g.id} href={`/goals/${g.id}`} className="flex items-center gap-3 border-b border-border px-4 py-3.5 last:border-b-0 hover:bg-surface-hover">
                 <Target size={16} className="shrink-0 text-brand-500" />
-                <span className="flex-1 truncate text-sm font-medium text-ink">{g.name}</span>
+                <span className="flex-1 block truncate text-sm font-medium text-ink">{g.name}</span>
                 <div className="hidden w-32 items-center gap-2 sm:flex">
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-hover">
                     <div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, g.progress)}%` }} />

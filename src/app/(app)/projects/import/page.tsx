@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -189,7 +189,7 @@ export default function ImportProjectsPage() {
               <label key={p.gid} className="flex cursor-pointer items-center gap-3 border-b border-border px-3.5 py-2.5 last:border-b-0 hover:bg-surface-hover">
                 <input type="checkbox" checked={selected.has(p.gid)} onChange={() => toggle(p.gid)} className="h-4 w-4 rounded border-border" />
                 <Hash size={13} className="text-ink-faint" />
-                <span className="truncate text-sm text-ink">{p.name}</span>
+                <span className="block truncate text-sm text-ink">{p.name}</span>
               </label>
             ))}
             {asanaProjects.length === 0 && <p className="px-3.5 py-8 text-center text-sm text-ink-muted">No active projects found in this workspace.</p>}

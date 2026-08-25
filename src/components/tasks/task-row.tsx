@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -45,7 +45,7 @@ export function TaskRow({
       </button>
       <Checkbox checked={task.completed} onCheckedChange={(v) => onToggleComplete(!!v)} />
       <button onClick={() => openTask(task.id)} className="min-w-0 flex-1 text-left">
-        <span className={cn('truncate text-[13.5px]', task.completed ? 'text-ink-faint line-through' : 'text-ink')}>
+        <span className={cn('block truncate text-[13.5px]', task.completed ? 'text-ink-faint line-through' : 'text-ink')}>
           {task.name}
         </span>
       </button>

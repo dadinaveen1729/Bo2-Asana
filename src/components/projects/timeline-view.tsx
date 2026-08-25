@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import { addDays, differenceInCalendarDays, format, isToday, isWeekend, startOfDay } from 'date-fns';
@@ -62,7 +62,7 @@ export function TimelineView({ projectId }: { projectId: string }) {
                   className="flex w-full items-center truncate border-b border-border px-3 text-left text-[13px] text-ink hover:bg-surface-hover"
                   style={{ height: ROW_HEIGHT }}
                 >
-                  <span className="truncate">{t.name}</span>
+                  <span className="block truncate">{t.name}</span>
                 </button>
               ))}
             </div>
@@ -110,7 +110,7 @@ export function TimelineView({ projectId }: { projectId: string }) {
                         title={t.name}
                       >
                         {t.is_milestone && <Diamond size={10} className="mr-1 shrink-0" />}
-                        <span className="truncate">{t.name}</span>
+                        <span className="block truncate">{t.name}</span>
                       </button>
                     )}
                   </div>

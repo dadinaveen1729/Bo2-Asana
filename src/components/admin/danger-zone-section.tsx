@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArchiveRestore, AlertTriangle, Loader2 } from 'lucide-react';
@@ -75,7 +75,7 @@ export function DangerZoneSection({ workspaceId }: { workspaceId: string }) {
                 {projects.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: p.color || '#8395A7' }} />
-                    <span className="min-w-0 flex-1 truncate text-sm text-ink">{p.name}</span>
+                    <span className="min-w-0 flex-1 block truncate text-sm text-ink">{p.name}</span>
                     <button
                       onClick={() => handleUnarchive(p.id)}
                       disabled={restoringId === p.id}

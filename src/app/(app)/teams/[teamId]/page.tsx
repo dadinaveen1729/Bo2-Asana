@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -92,7 +92,7 @@ export default function TeamDetailPage({ params }: { params: { teamId: string } 
               {members.map((m) => (
                 <button key={m.id} onClick={() => toggleMember(m.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover">
                   <Avatar name={m.full_name} email={m.email} color={m.avatar_color} src={m.avatar_url} size={22} />
-                  <span className="truncate text-ink">{m.full_name || m.email}</span>
+                  <span className="block truncate text-ink">{m.full_name || m.email}</span>
                   {memberIds.includes(m.id) && <Check size={13} className="ml-auto text-brand-500" />}
                 </button>
               ))}
@@ -113,7 +113,7 @@ export default function TeamDetailPage({ params }: { params: { teamId: string } 
           const meta = PROJECT_STATUS_META[p.status];
           return (
             <Link key={p.id} href={`/projects/${p.id}`} className="rounded-xl border border-border bg-white p-4 transition hover:border-border-strong hover:shadow-panel">
-              <span className="truncate text-sm font-semibold text-ink">{p.name}</span>
+              <span className="block truncate text-sm font-semibold text-ink">{p.name}</span>
               <div className="mt-2">
                 <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: meta.bg, color: meta.color }}>{meta.label}</span>
               </div>

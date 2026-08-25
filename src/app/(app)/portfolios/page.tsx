@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
@@ -62,7 +62,7 @@ function PortfoliosPageInner() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: p.color + '22' }}>
                   <Sparkles size={15} style={{ color: p.color }} />
                 </span>
-                <span className="truncate text-sm font-semibold text-ink">{p.name}</span>
+                <span className="block truncate text-sm font-semibold text-ink">{p.name}</span>
               </div>
               <p className="mt-2 text-xs text-ink-faint">{p.projects.length} project{p.projects.length === 1 ? '' : 's'}</p>
               <div className="mt-2 flex flex-wrap gap-1">

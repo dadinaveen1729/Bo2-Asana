@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -208,7 +208,7 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
               <div key={f.id} className="group flex items-center gap-2 border-b border-border px-3 py-2 last:border-b-0 hover:bg-surface-hover">
                 <button onClick={() => handleOpen(f)} disabled={openingId === f.id} className="flex min-w-0 flex-1 items-center gap-2.5 text-left disabled:opacity-50">
                   {openingId === f.id ? <Loader2 size={15} className="shrink-0 animate-spin text-ink-faint" /> : <Icon size={15} className="shrink-0 text-ink-faint" />}
-                  <span className="truncate text-[13.5px] text-ink">{f.file_name}</span>
+                  <span className="block truncate text-[13.5px] text-ink">{f.file_name}</span>
                 </button>
                 <button
                   onClick={() => f.task && openTask(f.task.id)}
@@ -219,7 +219,7 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
                 </button>
                 <div className="flex w-28 shrink-0 items-center gap-1.5">
                   {f.uploader && <Avatar name={f.uploader.full_name} email={f.uploader.email} color={f.uploader.avatar_color} src={f.uploader.avatar_url} size={18} />}
-                  <span className="truncate text-[13px] text-ink-faint">{f.uploader?.full_name || f.uploader?.email || 'Unknown'}</span>
+                  <span className="block truncate text-[13px] text-ink-faint">{f.uploader?.full_name || f.uploader?.email || 'Unknown'}</span>
                 </div>
                 <span className="w-20 shrink-0 text-[13px] text-ink-faint">{formatBytes(f.file_size)}</span>
                 <span className="w-24 shrink-0 text-[13px] text-ink-faint">{formatDistanceToNow(new Date(f.created_at), { addSuffix: true })}</span>

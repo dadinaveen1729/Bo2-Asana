@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -92,7 +92,7 @@ export default function PersonProfilePage({ params }: { params: { userId: string
                   return (
                     <Link key={p.id} href={`/projects/${p.id}`} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-surface-hover">
                       <Hash size={14} style={{ color: p.color || '#FC636B' }} />
-                      <span className="flex-1 truncate text-sm text-ink">{p.name}</span>
+                      <span className="flex-1 block truncate text-sm text-ink">{p.name}</span>
                       <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: meta.bg, color: meta.color }}>{meta.label}</span>
                     </Link>
                   );

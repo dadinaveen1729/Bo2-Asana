@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Check, Copy, Loader2 } from 'lucide-react';
@@ -60,7 +60,7 @@ export function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink">Share the sign-up link</label>
             <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-hover px-3 py-2">
-              <span className="flex-1 truncate text-sm text-ink-muted">{signupUrl}</span>
+              <span className="flex-1 block truncate text-sm text-ink-muted">{signupUrl}</span>
               <button onClick={copyLink} className="flex items-center gap-1 text-xs font-semibold text-brand-600">
                 {copied ? <Check size={13} /> : <Copy size={13} />}
                 {copied ? 'Copied' : 'Copy'}

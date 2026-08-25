@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useTaskPanel } from '@/lib/task-panel-context';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,7 +22,7 @@ export function SimpleTaskRow({ task, showProject = true }: { task: MyTask; show
     <div className="group flex items-center gap-2.5 border-b border-border px-3 py-2 hover:bg-surface-hover">
       <Checkbox checked={task.completed} onCheckedChange={(v) => updateTask({ completed: !!v })} />
       <button onClick={() => openTask(task.id)} className="min-w-0 flex-1 text-left">
-        <span className={cn('truncate text-[13.5px]', task.completed ? 'text-ink-faint line-through' : 'text-ink')}>{task.name}</span>
+        <span className={cn('block truncate text-[13.5px]', task.completed ? 'text-ink-faint line-through' : 'text-ink')}>{task.name}</span>
       </button>
       {showProject && task.project && (
         <span className="hidden shrink-0 items-center gap-1 rounded-md bg-surface-hover px-1.5 py-0.5 text-[11px] text-ink-faint sm:flex">

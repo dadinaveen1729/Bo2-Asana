@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useState } from 'react';
 import {
@@ -124,7 +124,7 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
                 ) : (
                   <Icon size={16} className="shrink-0 text-ink-faint" />
                 )}
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">{a.file_name}</span>
+                <span className="min-w-0 flex-1 block truncate text-sm text-ink">{a.file_name}</span>
                 <span className="shrink-0 text-xs text-ink-faint">{formatBytes(a.file_size)}</span>
               </button>
               <button

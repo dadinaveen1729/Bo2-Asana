@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -34,7 +34,7 @@ function NavLink({ href, icon: Icon, label, badge, active }: { href: string; ico
       )}
     >
       <Icon size={16.5} strokeWidth={2} className={active ? 'text-brand-500' : 'text-sidebar-ink-faint group-hover:text-sidebar-ink'} />
-      <span className="flex-1 truncate">{label}</span>
+      <span className="flex-1 block truncate">{label}</span>
       {!!badge && (
         <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
           {badge > 99 ? '99+' : badge}
@@ -84,7 +84,7 @@ export function Sidebar() {
               <path d="M4 12L10 18L20 6" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'BoostFlow'}</span>
+          <span className="block truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'BoostFlow'}</span>
         </div>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-2.5 pb-4">
@@ -161,7 +161,7 @@ export function Sidebar() {
                       )}
                     >
                       <Hash size={13} style={{ color: p.color || '#F14545' }} />
-                      <span className="truncate">{p.name}</span>
+                      <span className="block truncate">{p.name}</span>
                     </Link>
                     <button
                       onClick={() => removeFavorite(p.id)}
@@ -212,7 +212,7 @@ export function Sidebar() {
                           >
                             {team.name.slice(0, 1).toUpperCase()}
                           </span>
-                          <span className="truncate">{team.name}</span>
+                          <span className="block truncate">{team.name}</span>
                         </Link>
                         <button
                           onClick={() => router.push(`/projects/new?team=${team.id}`)}
@@ -236,7 +236,7 @@ export function Sidebar() {
                               )}
                             >
                               <Hash size={13} style={{ color: p.color || '#F14545' }} />
-                              <span className="truncate">{p.name}</span>
+                              <span className="block truncate">{p.name}</span>
                             </Link>
                           ))}
                         </div>
@@ -263,7 +263,7 @@ export function Sidebar() {
                     )}
                   >
                     <Hash size={13} style={{ color: p.color || '#F14545' }} />
-                    <span className="truncate">{p.name}</span>
+                    <span className="block truncate">{p.name}</span>
                   </Link>
                 ))}
               </div>

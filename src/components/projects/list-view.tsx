@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -541,7 +541,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                       <label key={m.id} className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-surface-hover">
                         <Checkbox checked={filterAssignees.has(m.id)} onCheckedChange={() => toggleAssigneeFilter(m.id)} />
                         <Avatar name={m.full_name} email={m.email} color={m.avatar_color} src={m.avatar_url} size={18} />
-                        <span className="truncate">{m.full_name || m.email}</span>
+                        <span className="block truncate">{m.full_name || m.email}</span>
                       </label>
                     ))}
                     <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-surface-hover">
@@ -629,7 +629,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                   {fields.map((f) => (
                     <label key={f.id} className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-surface-hover">
                       <Checkbox checked={!hiddenFieldIds.has(f.id)} onCheckedChange={() => toggleFieldVisibility(f.id)} />
-                      <span className="truncate">{f.name}</span>
+                      <span className="block truncate">{f.name}</span>
                     </label>
                   ))}
                 </div>
@@ -672,7 +672,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
           </div>
           <span className="w-14 shrink-0 text-[13px] font-medium text-ink-faint">Assignee</span>
           {visibleFields.map((f) => (
-            <span key={f.id} className={cn(fieldColWidth(f.type), 'shrink-0 truncate text-[13px] font-medium text-ink-faint')}>
+            <span key={f.id} className={cn(fieldColWidth(f.type), 'shrink-0 block truncate text-[13px] font-medium text-ink-faint')}>
               {f.name}
             </span>
           ))}

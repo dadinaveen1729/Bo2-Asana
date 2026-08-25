@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import {
@@ -81,7 +81,7 @@ export function CalendarView({ projectId }: { projectId: string }) {
                       style={meta ? { backgroundColor: meta.bg } : undefined}
                     >
                       {meta && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: meta.color }} />}
-                      <span className="truncate">{t.name}</span>
+                      <span className="block truncate">{t.name}</span>
                     </button>
                   );
                 })}

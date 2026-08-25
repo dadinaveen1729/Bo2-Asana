@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -75,7 +75,7 @@ export default function PortfolioDetailPage({ params }: { params: { portfolioId:
               {available.map((p) => (
                 <button key={p.id} onClick={() => addProject(portfolio.id, p.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color || '#FC636B' }} />
-                  <span className="truncate">{p.name}</span>
+                  <span className="block truncate">{p.name}</span>
                 </button>
               ))}
               {available.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">No projects found</p>}

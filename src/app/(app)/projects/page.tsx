@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -139,13 +139,13 @@ export default function BrowseProjectsPage() {
               </button>
               <Link href={`/projects/${p.id}`} className="flex min-w-0 items-center gap-2">
                 <Hash size={14} className="shrink-0" style={{ color: p.color || '#FC636B' }} />
-                <span className="truncate text-sm font-medium text-ink">{p.name}</span>
+                <span className="block truncate text-sm font-medium text-ink">{p.name}</span>
                 <span className="ml-1 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: meta.bg, color: meta.color }}>{meta.label}</span>
               </Link>
               <AvatarStack people={row?.members || []} size={22} max={4} />
               <div className="flex flex-wrap gap-1">
                 {(row?.portfolioNames || []).slice(0, 2).map((n) => (
-                  <span key={n} className="truncate rounded-full bg-surface-hover px-2 py-0.5 text-[11px] text-ink-faint">{n}</span>
+                  <span key={n} className="block truncate rounded-full bg-surface-hover px-2 py-0.5 text-[11px] text-ink-faint">{n}</span>
                 ))}
               </div>
               <span className="text-xs text-ink-faint">{format(new Date(p.updated_at), 'MMM d, yyyy')}</span>

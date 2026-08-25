@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Check, Loader2, Share2, UserPlus } from 'lucide-react';
@@ -109,7 +109,7 @@ export function ProjectMembersPopover({ projectId }: { projectId: string }) {
           {members.map((m) => (
             <button key={m.id} onClick={() => toggle(m.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover">
               <Avatar name={m.full_name} email={m.email} color={m.avatar_color} src={m.avatar_url} size={22} />
-              <span className="truncate text-ink">{m.full_name || m.email}</span>
+              <span className="block truncate text-ink">{m.full_name || m.email}</span>
               {memberIds.includes(m.id) && <Check size={13} className="ml-auto text-brand-500" />}
             </button>
           ))}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
@@ -142,7 +142,7 @@ function SelectField({
         {options.map((o) => (
           <button key={o.id} onClick={() => toggle(o.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: o.color }} />
-            <span className="truncate">{o.label}</span>
+            <span className="block truncate">{o.label}</span>
             {selectedIds.includes(o.id) && <Check size={13} className="ml-auto text-brand-500" />}
           </button>
         ))}
@@ -185,7 +185,7 @@ function PeoplePickerField({
         {members.map((m) => (
           <button key={m.id} onClick={() => { onChange(m.id); setOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover">
             <Avatar name={m.full_name} email={m.email} color={m.avatar_color} src={m.avatar_url} size={20} />
-            <span className="truncate">{m.full_name || m.email}</span>
+            <span className="block truncate">{m.full_name || m.email}</span>
           </button>
         ))}
       </PopoverContent>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -326,7 +326,7 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
                   }}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <span className={cn('flex-1 truncate text-sm', s.completed ? 'text-ink-faint line-through' : 'text-ink')}>{s.name}</span>
+                <span className={cn('flex-1 block truncate text-sm', s.completed ? 'text-ink-faint line-through' : 'text-ink')}>{s.name}</span>
                 <ChevronRight size={14} className="text-ink-faint opacity-0 group-hover:opacity-100" />
               </button>
             ))}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Check, ChevronDown, Flag, Plus, Tag as TagIcon, User, X } from 'lucide-react';
@@ -65,7 +65,7 @@ export function AssigneePicker({
               className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover"
             >
               <Avatar name={m.full_name} email={m.email} color={m.avatar_color} src={m.avatar_url} size={22} />
-              <span className="truncate text-ink">{m.full_name || m.email}</span>
+              <span className="block truncate text-ink">{m.full_name || m.email}</span>
               {assignee?.id === m.id && <Check size={14} className="ml-auto text-brand-500" />}
             </button>
           ))}
@@ -199,7 +199,7 @@ export function TagPicker({
               className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-hover"
             >
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.color }} />
-              <span className="truncate text-ink">{t.name}</span>
+              <span className="block truncate text-ink">{t.name}</span>
               {selectedIds.has(t.id) && <Check size={13} className="ml-auto text-brand-500" />}
             </button>
           ))}
