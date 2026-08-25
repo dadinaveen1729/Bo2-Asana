@@ -10,6 +10,7 @@ import { TaskPanelProvider } from '@/lib/task-panel-context';
 import { UndoProvider } from '@/lib/undo-context';
 import { Sidebar } from '@/components/app-shell/sidebar';
 import { TopBar } from '@/components/app-shell/topbar';
+import { NotificationListener } from '@/components/app-shell/notification-listener';
 import { TaskDetailPanel } from '@/components/tasks/task-detail-panel';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Loader2 } from 'lucide-react';
@@ -70,6 +71,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <FavoritesDndContext.Provider value={favorites}>
+      {user && <NotificationListener userId={user.id} />}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex h-screen w-screen overflow-hidden bg-canvas">
           <Sidebar />

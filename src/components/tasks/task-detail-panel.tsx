@@ -114,9 +114,33 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
   ].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
 
   async function handleComment() {
-    if (!comment.trim() || !user) return;
+    if (!comment.trim() || !user || !task) return;
     setPosting(true);
     await addComment(user.id, comment);
+
+    // Plain-text @mention detection: "@Full Name" or "@email" against
+    // workspace members. There's no live autocomplete-while-typing yet —
+    // this matches whatever you actually typed after posting.
+    const lower = comment.toLowerCase();
+    const mentioned = members.filter((m) => {
+      if (m.id === user.id) return false;
+      const byName = m.full_name && lower.includes('@' + m.full_name.toLowerCase());
+      const byEmail = lower.includes('@' + m.email.toLowerCase());
+      return byName || byEmail;
+    });
+    if (mentioned.length > 0) {
+      const supabase = createClient();
+      await supabase.from('notifications').insert(
+        mentioned.map((m) => ({
+          user_id: m.id,
+          type: 'mentioned' as const,
+          actor_id: user.id,
+          task_id: task.id,
+          message: task.name,
+        }))
+      );
+    }
+
     setComment('');
     setPosting(false);
   }
