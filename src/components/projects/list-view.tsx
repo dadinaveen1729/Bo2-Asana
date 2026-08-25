@@ -19,6 +19,7 @@ import { useCustomFields, type CustomField } from '@/hooks/use-custom-fields';
 import { useTaskPanel } from '@/lib/task-panel-context';
 import { useUndo } from '@/lib/undo-context';
 import { TaskRow } from '@/components/tasks/task-row';
+import { AssigneePicker, DatePickerButton, PriorityPicker } from '@/components/tasks/pickers';
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
@@ -88,16 +89,29 @@ function dueBucketOf(t: ProjectTask): string {
   return 'later';
 }
 
-function fieldColWidth(type: CustomField['type']) {
+// Pixel widths shared by the header row and every task row's grid-template
+// so custom-field columns always line up exactly, whatever fields a
+// project has defined.
+function fieldColPx(type: CustomField['type']) {
   switch (type) {
-    case 'checkbox': return 'w-10';
-    case 'number': return 'w-20';
-    case 'date': return 'w-28';
-    case 'people': return 'w-32';
-    case 'multi_select': return 'w-40';
-    case 'single_select': return 'w-32';
-    default: return 'w-28';
+    case 'checkbox': return 60;
+    case 'number': return 90;
+    case 'date': return 110;
+    case 'people': return 130;
+    case 'multi_select': return 160;
+    case 'single_select': return 130;
+    default: return 120;
   }
+}
+
+const NAME_COL = 'minmax(240px,1fr)';
+const ASSIGNEE_COL = '64px';
+const PRIORITY_COL = '108px';
+const DUE_DATE_COL = '100px';
+const ADD_COL_COL = '32px';
+
+function rowGridTemplate(fields: CustomField[]) {
+  return [NAME_COL, ASSIGNEE_COL, PRIORITY_COL, DUE_DATE_COL, ...fields.map((f) => `${fieldColPx(f.type)}px`), ADD_COL_COL].join(' ');
 }
 
 export function ListView({ projectId, onAddColumn }: { projectId: string; onAddColumn?: () => void }) {
@@ -182,6 +196,11 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
     const { error } = await supabase
       .from('custom_field_values')
       .upsert({ task_id: taskId, custom_field_id: fieldId, ...patch }, { onConflict: 'task_id,custom_field_id' });
+    if (error) toast.error(error.message);
+  }
+
+  async function updateTaskField(taskId: string, patch: Partial<Pick<ProjectTask, 'assignee_id' | 'priority' | 'due_date'>>) {
+    const { error } = await supabase.from('tasks').update(patch).eq('id', taskId);
     if (error) toast.error(error.message);
   }
 
@@ -662,27 +681,27 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
       </div>
 
       {groupMetas.length > 0 && (
-        <div className="flex items-center gap-2 px-6 py-1.5">
+        <div className="flex items-center px-6 py-1.5">
           <div className="w-[14px] shrink-0" />
           <div className="w-4 shrink-0" />
-          <span className="flex-1 text-[13px] font-medium text-ink-faint">Name</span>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <span className="w-[92px] shrink-0 text-[13px] font-medium text-ink-faint">Priority</span>
-            <span className="w-[84px] shrink-0 text-[13px] font-medium text-ink-faint">Due date</span>
+          <div className="grid min-w-0 flex-1 items-center gap-x-2" style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}>
+            <span className="block truncate pl-1 text-[13px] font-medium text-ink-faint">Name</span>
+            <span className="text-[13px] font-medium text-ink-faint">Assignee</span>
+            <span className="text-[13px] font-medium text-ink-faint">Priority</span>
+            <span className="text-[13px] font-medium text-ink-faint">Due date</span>
+            {visibleFields.map((f) => (
+              <span key={f.id} className="block truncate text-[13px] font-medium text-ink-faint">
+                {f.name}
+              </span>
+            ))}
+            <button
+              onClick={onAddColumn}
+              title="Add column"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-ink-faint hover:bg-surface-hover"
+            >
+              <Plus size={14} />
+            </button>
           </div>
-          <span className="w-14 shrink-0 text-[13px] font-medium text-ink-faint">Assignee</span>
-          {visibleFields.map((f) => (
-            <span key={f.id} className={cn(fieldColWidth(f.type), 'shrink-0 block truncate text-[13px] font-medium text-ink-faint')}>
-              {f.name}
-            </span>
-          ))}
-          <button
-            onClick={onAddColumn}
-            title="Add column"
-            className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint hover:bg-surface-hover"
-          >
-            <Plus size={14} />
-          </button>
         </div>
       )}
 
@@ -736,8 +755,12 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                         const t = taskById[id];
                         if (!t) return null;
                         return (
-                          <div key={id} className="flex items-stretch">
-                            <div className="min-w-0 flex-1">
+                          <div
+                            key={id}
+                            className="group grid items-stretch border-b border-border last:border-b-0 hover:bg-surface-hover"
+                            style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}
+                          >
+                            <div className="min-w-0">
                               <ContextMenu>
                                 <ContextMenuTrigger asChild>
                                   <div>
@@ -804,11 +827,25 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                                 </ContextMenuContent>
                               </ContextMenu>
                             </div>
+                            <div className="flex items-center px-2">
+                              <AssigneePicker
+                                assignee={t.assignee}
+                                onChange={(userId) => updateTaskField(t.id, { assignee_id: userId })}
+                                size={22}
+                              />
+                            </div>
+                            <div className="flex items-center px-2">
+                              <PriorityPicker priority={t.priority} onChange={(p) => updateTaskField(t.id, { priority: p as ProjectTask['priority'] })} />
+                            </div>
+                            <div className="flex items-center px-2">
+                              <DatePickerButton
+                                date={t.due_date}
+                                completed={t.completed}
+                                onChange={(d) => updateTaskField(t.id, { due_date: d })}
+                              />
+                            </div>
                             {visibleFields.map((f) => (
-                              <div
-                                key={f.id}
-                                className={cn(fieldColWidth(f.type), 'shrink-0 border-b border-border px-2 py-1.5 hover:bg-surface-hover')}
-                              >
+                              <div key={f.id} className="flex items-center px-2">
                                 <CustomFieldInput
                                   field={f}
                                   value={customValues.find((v) => v.task_id === id && v.custom_field_id === f.id) || null}

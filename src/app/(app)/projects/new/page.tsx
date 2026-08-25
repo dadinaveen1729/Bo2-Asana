@@ -3,7 +3,7 @@
 import { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ChevronDown, Import, MessageSquareText, Pencil, Plus, Sparkles, X,
+  ChevronDown, FileSpreadsheet, Import, MessageSquareText, Pencil, Plus, Sparkles, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspace } from '@/lib/workspace-context';
@@ -14,6 +14,7 @@ import { CreateProjectDialog } from '@/components/projects/create-project-dialog
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export default function NewProjectPage() {
   return (
@@ -96,12 +97,35 @@ function TemplateGallery() {
           >
             <Sparkles size={14} /> Create with AI
           </button>
-          <button
-            onClick={() => router.push('/projects/import')}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover"
-          >
-            <Import size={14} /> Import
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover">
+                <Import size={14} /> Import
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-1.5">
+              <button
+                onClick={() => router.push('/projects/import')}
+                className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-surface-hover"
+              >
+                <Import size={15} className="mt-0.5 shrink-0 text-ink-faint" />
+                <span>
+                  <span className="block text-sm font-medium text-ink">Import from Asana</span>
+                  <span className="block text-xs text-ink-faint">Bring over projects, sections, and tasks</span>
+                </span>
+              </button>
+              <button
+                onClick={() => router.push('/projects/import/spreadsheet')}
+                className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-surface-hover"
+              >
+                <FileSpreadsheet size={15} className="mt-0.5 shrink-0 text-ink-faint" />
+                <span>
+                  <span className="block text-sm font-medium text-ink">Import from spreadsheet</span>
+                  <span className="block text-xs text-ink-faint">Upload a CSV or Excel file</span>
+                </span>
+              </button>
+            </PopoverContent>
+          </Popover>
           <button
             onClick={() => setBlankOpen(true)}
             className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-brand-600"
