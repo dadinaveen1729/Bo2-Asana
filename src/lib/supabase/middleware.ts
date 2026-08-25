@@ -29,7 +29,14 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith('/login') || path.startsWith('/signup') || path.startsWith('/reset-password') || path.startsWith('/accept-invite');
-  const isPublicAsset = path.startsWith('/_next') || path.startsWith('/favicon') || path.startsWith('/api/public');
+  // Server-to-server webhook routes (invoked by pg_net from a Postgres
+  // trigger, not a browser) carry no session cookie and authenticate
+  // themselves via an x-webhook-secret header instead. Without this bypass
+  // every such call was silently redirected to /login (307), which the
+  // caller can't follow as a POST, turning into a 405 -- so every invite
+  // and notification email was failing before it ever reached Brevo.
+  const isWebhookRoute = path.startsWith('/api/notifications/email');
+  const isPublicAsset = path.startsWith('/_next') || path.startsWith('/favicon') || path.startsWith('/api/public') || isWebhookRoute;
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();
