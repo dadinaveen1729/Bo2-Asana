@@ -42,7 +42,7 @@ function groupByDate(list: NotificationRow[]) {
 
 export default function InboxPage() {
   const { user } = useWorkspace();
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications(user?.id);
+  const { notifications, unreadCount, markRead, markAllRead, toggleBookmark } = useNotifications(user?.id);
   const { openTask } = useTaskPanel();
   const [tab, setTab] = useState<'activity' | 'bookmarks' | 'archive' | 'mentioned'>('activity');
   const [summaryDismissed, setSummaryDismissed] = useState(false);
@@ -56,6 +56,7 @@ export default function InboxPage() {
 
   const archived = useMemo(() => notifications.filter((n) => n.read), [notifications]);
   const mentioned = useMemo(() => notifications.filter((n) => n.type === 'mentioned'), [notifications]);
+  const bookmarked = useMemo(() => notifications.filter((n) => n.bookmarked), [notifications]);
 
   function computeSummary() {
     const cutoff = subDays(new Date(), summaryTimeframe === 'week' ? 7 : 30);
@@ -71,34 +72,45 @@ export default function InboxPage() {
   function renderRow(n: NotificationRow) {
     const Icon = ICONS[n.type] || Bell;
     return (
-      <button
+      <div
         key={n.id}
-        onClick={() => handleClick(n)}
         className={cn(
-          'flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition last:border-b-0 hover:bg-surface-hover',
+          'group flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition last:border-b-0 hover:bg-surface-hover',
           !n.read && 'bg-brand-50/40'
         )}
       >
-        <div className="relative shrink-0">
-          <Avatar name={n.actor?.full_name} email={n.actor?.email} color={n.actor?.avatar_color} src={n.actor?.avatar_url} size={32} />
-          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-ink-muted ring-2 ring-white">
-            <Icon size={10} />
-          </span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-ink">
-            <span className="font-semibold">{n.actor?.full_name || n.actor?.email || 'Someone'}</span>{' '}
-            {n.type === 'assigned' && 'assigned you a task:'}
-            {n.type === 'comment' && 'commented on:'}
-            {n.type === 'mentioned' && 'mentioned you in:'}
-            {!['assigned', 'comment', 'mentioned'].includes(n.type) && 'updated:'}
-            {' '}
-            <span className="text-ink-muted">{n.message}</span>
-          </p>
-          <p className="mt-0.5 text-xs text-ink-faint">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
-        </div>
+        <button onClick={() => handleClick(n)} className="flex min-w-0 flex-1 items-start gap-3 text-left">
+          <div className="relative shrink-0">
+            <Avatar name={n.actor?.full_name} email={n.actor?.email} color={n.actor?.avatar_color} src={n.actor?.avatar_url} size={32} />
+            <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-ink-muted ring-2 ring-white">
+              <Icon size={10} />
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-ink">
+              <span className="font-semibold">{n.actor?.full_name || n.actor?.email || 'Someone'}</span>{' '}
+              {n.type === 'assigned' && 'assigned you a task:'}
+              {n.type === 'comment' && 'commented on:'}
+              {n.type === 'mentioned' && 'mentioned you in:'}
+              {!['assigned', 'comment', 'mentioned'].includes(n.type) && 'updated:'}
+              {' '}
+              <span className="text-ink-muted">{n.message}</span>
+            </p>
+            <p className="mt-0.5 text-xs text-ink-faint">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+          </div>
+        </button>
+        <button
+          onClick={() => toggleBookmark(n.id, n.bookmarked)}
+          title={n.bookmarked ? 'Remove bookmark' : 'Bookmark'}
+          className={cn(
+            'mt-0.5 shrink-0 rounded-md p-1 opacity-0 group-hover:opacity-100',
+            n.bookmarked ? 'text-brand-600 opacity-100' : 'text-ink-faint hover:bg-border'
+          )}
+        >
+          <Bookmark size={14} fill={n.bookmarked ? 'currentColor' : 'none'} />
+        </button>
         {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-500" />}
-      </button>
+      </div>
     );
   }
 
@@ -184,9 +196,15 @@ export default function InboxPage() {
         </TabsContent>
 
         <TabsContent value="bookmarks" className="mt-4">
-          <div className="rounded-xl border border-dashed border-border px-4 py-16 text-center">
-            <Bookmark className="mx-auto mb-2 text-ink-faint" size={20} />
-            <p className="text-sm text-ink-muted">No bookmarks yet.</p>
+          <div className="overflow-hidden rounded-xl border border-border">
+            {bookmarked.length === 0 ? (
+              <div className="px-4 py-16 text-center">
+                <Bookmark className="mx-auto mb-2 text-ink-faint" size={20} />
+                <p className="text-sm text-ink-muted">No bookmarks yet. Hover a notification and click the bookmark icon to save it here.</p>
+              </div>
+            ) : (
+              renderFeed(bookmarked, 'No bookmarks yet.')
+            )}
           </div>
         </TabsContent>
 

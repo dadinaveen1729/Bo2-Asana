@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { createClient } from '@/lib/supabase/client';
 import { useWorkspace } from '@/lib/workspace-context';
+import { notifyMentions } from '@/lib/mentions';
 import { Avatar, AvatarStack } from '@/components/ui/avatar';
 import { DatePickerButton } from '@/components/tasks/pickers';
 import { PROJECT_STATUS_META } from '@/lib/utils';
@@ -21,7 +22,7 @@ export function ProjectOverview({
   project: Project;
   onUpdate: (patch: Record<string, unknown>) => Promise<void>;
 }) {
-  const { members } = useWorkspace();
+  const { user, members } = useWorkspace();
   const [description, setDescription] = useState(project.description || '');
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [owner, setOwner] = useState<Tables<'profiles'> | null>(null);
@@ -117,8 +118,19 @@ export function ProjectOverview({
   }, [project.id, loadActivity]);
 
   async function saveDescription() {
-    if (description === (project.description || '')) return;
+    const previous = project.description || '';
+    if (description === previous) return;
     await onUpdate({ description: description || null });
+    if (user) {
+      await notifyMentions(createClient(), {
+        text: description,
+        previousText: previous,
+        members,
+        actorId: user.id,
+        projectId: project.id,
+        message: `on ${project.name}`,
+      });
+    }
   }
 
   const statusMeta = PROJECT_STATUS_META[project.status];

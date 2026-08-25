@@ -1,9 +1,10 @@
 ﻿'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArchiveRestore, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArchiveRestore, AlertTriangle, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { Tables } from '@/types/database';
 
 type Project = Tables<'projects'>;
@@ -13,6 +14,8 @@ export function DangerZoneSection({ workspaceId }: { workspaceId: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -47,6 +50,20 @@ export function DangerZoneSection({ workspaceId }: { workspaceId: string }) {
     }
     setProjects((prev) => prev.filter((p) => p.id !== id));
     toast.success('Project restored');
+  }
+
+  async function handleDeletePermanently() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from('projects').delete().eq('id', deleteTarget.id);
+    setDeleting(false);
+    if (error) {
+      toast.error('Could not delete project: ' + error.message);
+      return;
+    }
+    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    toast.success(`"${deleteTarget.name}" permanently deleted`);
+    setDeleteTarget(null);
   }
 
   return (
@@ -84,6 +101,13 @@ export function DangerZoneSection({ workspaceId }: { workspaceId: string }) {
                       {restoringId === p.id ? <Loader2 size={12} className="animate-spin" /> : <ArchiveRestore size={12} />}
                       Unarchive
                     </button>
+                    <button
+                      onClick={() => setDeleteTarget(p)}
+                      className="flex shrink-0 items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 size={12} />
+                      Delete permanently
+                    </button>
                   </div>
                 ))}
               </div>
@@ -91,6 +115,31 @@ export function DangerZoneSection({ workspaceId }: { workspaceId: string }) {
           </div>
         </div>
       </div>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Permanently delete "{deleteTarget?.name}"?</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 py-2 text-sm text-ink-muted">
+            This permanently deletes the project and every task, section, and attachment in it. This can't be undone
+            — unarchiving won't bring it back after this.
+          </div>
+          <DialogFooter>
+            <button onClick={() => setDeleteTarget(null)} className="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-muted hover:bg-surface-hover">
+              Cancel
+            </button>
+            <button
+              onClick={handleDeletePermanently}
+              disabled={deleting}
+              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting && <Loader2 size={14} className="animate-spin" />}
+              Delete permanently
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

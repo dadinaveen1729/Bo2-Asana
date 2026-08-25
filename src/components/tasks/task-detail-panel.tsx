@@ -21,6 +21,7 @@ import { AssigneePicker, DatePickerButton, PriorityPicker, TagPicker } from '@/c
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { TaskAttachments } from '@/components/tasks/task-attachments';
 import { createClient } from '@/lib/supabase/client';
+import { notifyMentions } from '@/lib/mentions';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -118,28 +119,14 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
     setPosting(true);
     await addComment(user.id, comment);
 
-    // Plain-text @mention detection: "@Full Name" or "@email" against
-    // workspace members. There's no live autocomplete-while-typing yet —
-    // this matches whatever you actually typed after posting.
-    const lower = comment.toLowerCase();
-    const mentioned = members.filter((m) => {
-      if (m.id === user.id) return false;
-      const byName = m.full_name && lower.includes('@' + m.full_name.toLowerCase());
-      const byEmail = lower.includes('@' + m.email.toLowerCase());
-      return byName || byEmail;
+    await notifyMentions(createClient(), {
+      text: comment,
+      members,
+      actorId: user.id,
+      taskId: task.id,
+      projectId: primaryProject?.id ?? null,
+      message: task.name,
     });
-    if (mentioned.length > 0) {
-      const supabase = createClient();
-      await supabase.from('notifications').insert(
-        mentioned.map((m) => ({
-          user_id: m.id,
-          type: 'mentioned' as const,
-          actor_id: user.id,
-          task_id: task.id,
-          message: task.name,
-        }))
-      );
-    }
 
     setComment('');
     setPosting(false);
@@ -299,7 +286,21 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
             ref={notesRef}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            onBlur={() => notes !== (task.notes || '') && updateTask({ notes: notes || null })}
+            onBlur={() => {
+              if (notes === (task.notes || '')) return;
+              updateTask({ notes: notes || null });
+              if (user) {
+                notifyMentions(createClient(), {
+                  text: notes,
+                  previousText: task.notes || '',
+                  members,
+                  actorId: user.id,
+                  taskId: task.id,
+                  projectId: primaryProject?.id ?? null,
+                  message: task.name,
+                });
+              }
+            }}
             placeholder="Add a description..."
             rows={1}
             className="w-full resize-none rounded-lg border-none p-0 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-faint"

@@ -529,6 +529,39 @@ export type Database = {
           },
         ]
       }
+      notification_bookmarks: {
+        Row: {
+          created_at: string
+          notification_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          notification_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          notification_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_bookmarks_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           actor_id: string | null
