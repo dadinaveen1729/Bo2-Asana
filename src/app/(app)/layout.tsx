@@ -30,12 +30,26 @@ export function useFavoritesDnd() {
   return ctx;
 }
 
+// Below the `lg` breakpoint the sidebar becomes an off-canvas drawer instead
+// of a static 248px column; TopBar's hamburger button and the sidebar's own
+// close button both need to open/close it, so it's shared via context rather
+// than prop-drilled between these two layout siblings.
+type MobileNavValue = { open: boolean; setOpen: (v: boolean) => void };
+const MobileNavContext = createContext<MobileNavValue | null>(null);
+
+export function useMobileNav() {
+  const ctx = useContext(MobileNavContext);
+  if (!ctx) throw new Error('useMobileNav must be used within the (app) layout');
+  return ctx;
+}
+
 type DragCardData = { name: string; color?: string | null };
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { loading, error, workspace, user } = useWorkspace();
   const favorites = useFavorites(user?.id);
   const [activeDrag, setActiveDrag] = useState<DragCardData | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function handleDragStart(e: DragStartEvent) {
@@ -71,25 +85,27 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <FavoritesDndContext.Provider value={favorites}>
-      {user && <NotificationListener userId={user.id} />}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex h-screen w-screen overflow-hidden bg-canvas">
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <TopBar />
-            <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto">{children}</div>
-          </div>
-          <TaskDetailPanel />
-        </div>
-        <DragOverlay>
-          {activeDrag ? (
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 shadow-panel">
-              <Hash size={14} style={{ color: activeDrag.color || '#FC636B' }} />
-              <span className="text-sm font-medium text-ink">{activeDrag.name}</span>
+      <MobileNavContext.Provider value={{ open: mobileNavOpen, setOpen: setMobileNavOpen }}>
+        {user && <NotificationListener userId={user.id} />}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="flex h-screen w-screen overflow-hidden bg-canvas">
+            <Sidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <TopBar />
+              <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto">{children}</div>
             </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+            <TaskDetailPanel />
+          </div>
+          <DragOverlay>
+            {activeDrag ? (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 shadow-panel">
+                <Hash size={14} style={{ color: activeDrag.color || '#FC636B' }} />
+                <span className="text-sm font-medium text-ink">{activeDrag.name}</span>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </MobileNavContext.Provider>
     </FavoritesDndContext.Provider>
   );
 }

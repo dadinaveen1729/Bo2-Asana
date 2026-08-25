@@ -680,8 +680,16 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
         </div>
       </div>
 
+      {/*
+        The grid columns below have fixed pixel widths (see rowGridTemplate)
+        that easily exceed a phone's viewport once a couple of custom fields
+        are added. Rather than a separate mobile card layout, this scrolls
+        the header and every row horizontally together, same as Asana's own
+        mobile web list view.
+      */}
+      <div className="overflow-x-auto">
       {groupMetas.length > 0 && (
-        <div className="flex items-center px-6 py-1.5">
+        <div className="flex w-max min-w-full items-center px-6 py-1.5">
           <div className="w-[14px] shrink-0" />
           <div className="w-4 shrink-0" />
           <div
@@ -893,6 +901,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
 
         <DragOverlay>{activeId && taskById[activeId] && <div className="w-[400px] rounded-lg border border-border bg-white px-3 py-2 shadow-popover text-sm">{taskById[activeId].name}</div>}</DragOverlay>
       </DndContext>
+      </div>
 
       {groupField === 'section' && (
         <div className="px-6 pt-2">

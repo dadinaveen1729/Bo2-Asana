@@ -93,8 +93,8 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border px-6 pt-4">
-        <div className="flex items-center gap-2.5">
+      <div className="border-b border-border px-4 pt-4 sm:px-6">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: project.color || '#FC636B' }} />
           {nameDraft !== null ? (
             <input
@@ -177,13 +177,13 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-1">
+        <div className="scrollbar-thin -mb-px flex items-center gap-1 overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setView(t.key)}
               className={cn(
-                'flex items-center gap-1.5 rounded-t-lg border-b-2 px-3 py-2 text-[13px] font-medium transition-colors',
+                'flex shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 py-2 text-[13px] font-medium transition-colors',
                 view === t.key ? 'border-brand-500 text-ink' : 'border-transparent text-ink-muted hover:text-ink'
               )}
             >

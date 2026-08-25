@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDroppable } from '@dnd-kit/core';
@@ -13,7 +13,7 @@ import { useTeams, useProjects } from '@/hooks/use-teams-projects';
 import { useNotifications } from '@/hooks/use-notifications';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { useFavoritesDnd, SIDEBAR_STARRED_DROP_ID } from '@/app/(app)/layout';
+import { useFavoritesDnd, useMobileNav, SIDEBAR_STARRED_DROP_ID } from '@/app/(app)/layout';
 import { Avatar } from '@/components/ui/avatar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -52,6 +52,7 @@ export function Sidebar() {
   const { projects } = useProjects(workspace?.id);
   const { unreadCount } = useNotifications(user?.id);
   const { favoriteProjectIds, removeFavorite } = useFavoritesDnd();
+  const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNav();
   const { setNodeRef: setStarredDropRef, isOver: isOverStarred } = useDroppable({ id: SIDEBAR_STARRED_DROP_ID });
   const [teamsOpen, setTeamsOpen] = useState(true);
   const [starredOpen, setStarredOpen] = useState(true);
@@ -68,6 +69,14 @@ export function Sidebar() {
     router.refresh();
   }
 
+  // The drawer should get out of the way once a link is actually followed,
+  // since it's a full off-canvas overlay below `lg` and would otherwise
+  // cover the page it just navigated to.
+  useEffect(() => {
+    setMobileOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const untethered = projects.filter((p) => !p.team_id);
   const starredProjects = useMemo(
     () => projects.filter((p) => favoriteProjectIds.has(p.id)),
@@ -76,7 +85,20 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex h-screen w-[248px] shrink-0 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-out',
+          'lg:static lg:z-auto lg:translate-x-0',
+          mobileOpen && 'translate-x-0'
+        )}
+      >
         {/* Workspace switcher */}
         <div className="flex items-center gap-2 px-3.5 py-3.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 text-white">
@@ -84,7 +106,13 @@ export function Sidebar() {
               <path d="M4 12L10 18L20 6" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="block truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'BoostFlow'}</span>
+          <span className="flex-1 block truncate text-[14px] font-semibold text-sidebar-ink-strong">{workspace?.name || 'BoostFlow'}</span>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="rounded-md p-1 text-sidebar-ink-faint hover:bg-sidebar-hover hover:text-sidebar-ink-strong lg:hidden"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-2.5 pb-4">
