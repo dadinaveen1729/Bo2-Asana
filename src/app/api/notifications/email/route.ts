@@ -39,7 +39,12 @@ export async function POST(req: Request) {
   try {
     const transporter = nodemailer.createTransport({ host, port, secure: false, auth: { user, pass } });
     await transporter.sendMail({
-      from: '"BoostFlow" <notifications@boostoxygen.com>',
+      // Brevo silently drops mail from a "from" address it hasn't verified --
+      // the SMTP submission still returns 250 OK (so this looks like it
+      // "sent" from our side) but nothing is actually delivered. The only
+      // sender verified on this Brevo account is boostoxygen30@gmail.com;
+      // notifications@boostoxygen.com was never added/verified there.
+      from: '"BoostFlow" <boostoxygen30@gmail.com>',
       to: recipientEmail,
       subject,
       text: `Hi ${recipientName || ''},\n\n${subject}.\n\n${message || ''}\n\nOpen it: ${link}\n\n— BoostFlow`,
