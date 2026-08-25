@@ -122,7 +122,7 @@ export default function TeamDetailPage({ params }: { params: { teamId: string } 
         })}
         {teamProjects.length === 0 && (
           <div className="col-span-2 rounded-xl border border-dashed border-border py-10 text-center text-sm text-ink-muted">
-            No projects yet.
+            No projects yet. This team is fresh out of the box.
           </div>
         )}
       </div>

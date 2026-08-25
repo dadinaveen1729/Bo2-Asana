@@ -98,7 +98,7 @@ export default function PortfolioDetailPage({ params }: { params: { portfolioId:
             </div>
           );
         })}
-        {portfolio.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects added yet.</p>}
+        {portfolio.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects added yet. This portfolio is looking pretty minimalist.</p>}
       </div>
     </div>
   );

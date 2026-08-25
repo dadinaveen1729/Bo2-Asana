@@ -391,10 +391,10 @@ export default function HomePage() {
   const activeTasks = taskTab === 'upcoming' ? upcomingTasks : taskTab === 'overdue' ? overdueTasks : completedTasks;
   const emptyText =
     taskTab === 'upcoming'
-      ? "You're all caught up."
+      ? "You're all caught up. Go touch some grass."
       : taskTab === 'overdue'
-        ? 'No overdue tasks. Nice work!'
-        : 'No completed tasks yet.';
+        ? 'No overdue tasks. Look at you go!'
+        : 'No completed tasks yet. The first one is the hardest.';
 
   const visibleKeys = useMemo(() => layout.filter((s) => s.visible).map((s) => s.key), [layout]);
 
@@ -505,7 +505,7 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-ink-faint">No other members in this workspace yet.</p>
+          <p className="text-xs text-ink-faint">No other members yet. It's a little lonely in here.</p>
         )}
         {collaborators.length > frequentCollaborators.length && (
           <Link href="/people" className="mt-2 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">

@@ -153,7 +153,7 @@ export default function BrowseProjectsPage() {
           );
         })}
         {filtered.length === 0 && (
-          <p className="px-4 py-12 text-center text-sm text-ink-muted">No projects match your filters.</p>
+          <p className="px-4 py-12 text-center text-sm text-ink-muted">No projects match your filters. Try loosening the net a bit.</p>
         )}
       </div>
     </div>

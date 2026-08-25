@@ -9,9 +9,25 @@ const inter = Inter({
   display: 'swap',
 });
 
+const APP_URL = 'https://bo2-asana.vercel.app';
+const DESCRIPTION = 'Internal work management for Boost Oxygen — now with 100% more oxygen.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: 'Boost Hub',
-  description: 'Work management for Boost Oxygen',
+  description: DESCRIPTION,
+  openGraph: {
+    title: 'Boost Hub',
+    description: DESCRIPTION,
+    url: APP_URL,
+    siteName: 'Boost Hub',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Boost Hub',
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

@@ -36,7 +36,12 @@ export async function updateSession(request: NextRequest) {
   // caller can't follow as a POST, turning into a 405 -- so every invite
   // and notification email was failing before it ever reached Brevo.
   const isWebhookRoute = path.startsWith('/api/notifications/email');
-  const isPublicAsset = path.startsWith('/_next') || path.startsWith('/favicon') || path.startsWith('/api/public') || isWebhookRoute;
+  // Link-preview crawlers (Slack, iMessage, WhatsApp, Discord, etc.) fetch
+  // og:image/twitter:image anonymously -- no session cookie. Without this
+  // bypass they'd get redirected to the /login HTML instead of the actual
+  // image, so every shared link would show a blank/broken preview card.
+  const isShareImage = path.startsWith('/opengraph-image') || path.startsWith('/twitter-image');
+  const isPublicAsset = path.startsWith('/_next') || path.startsWith('/favicon') || path.startsWith('/api/public') || isWebhookRoute || isShareImage;
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();

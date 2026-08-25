@@ -99,7 +99,7 @@ export default function PersonProfilePage({ params }: { params: { userId: string
                 })}
               </div>
             ) : (
-              <p className="px-4 py-8 text-center text-sm text-ink-muted">No projects yet.</p>
+              <p className="px-4 py-8 text-center text-sm text-ink-muted">No projects yet. A blank canvas, if you will.</p>
             )}
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function PersonProfilePage({ params }: { params: { userId: string
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-ink-muted">No shared projects yet.</p>
+              <p className="text-sm text-ink-muted">No shared projects yet. Strangers on the internet, for now.</p>
             )}
           </div>
 

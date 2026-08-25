@@ -203,7 +203,7 @@ function TemplateGallery() {
         <p className="mt-0.5 text-sm text-ink-muted">Help your teams track, plan, and deliver impactful work</p>
         {filtered.length === 0 ? (
           <p className="mt-6 rounded-xl border border-dashed border-border py-10 text-center text-sm text-ink-muted">
-            No templates in this category yet.
+            No templates in this category yet. Our template elves are still crafting.
           </p>
         ) : (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

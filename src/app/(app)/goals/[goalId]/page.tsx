@@ -142,7 +142,7 @@ export default function GoalDetailPage({ params }: { params: { goalId: string } 
             </div>
           );
         })}
-        {goal.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects connected yet.</p>}
+        {goal.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects connected yet. This goal is flying solo.</p>}
       </div>
     </div>
   );
