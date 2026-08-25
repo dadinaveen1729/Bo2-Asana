@@ -18,6 +18,7 @@ interface WorkspaceContextValue {
   loading: boolean;
   error: string | null;
   refreshMembers: () => Promise<void>;
+  refreshWorkspace: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -121,8 +122,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     if (workspace) await loadMembers(workspace.id);
   }, [workspace, loadMembers]);
 
+  const refreshWorkspace = useCallback(async () => {
+    if (!workspace) return;
+    const { data } = await supabase.from('workspaces').select('*').eq('id', workspace.id).single();
+    if (data) setWorkspace(data);
+  }, [workspace, supabase]);
+
   return (
-    <WorkspaceContext.Provider value={{ user, profile, workspace, role, members, loading, error, refreshMembers }}>
+    <WorkspaceContext.Provider
+      value={{ user, profile, workspace, role, members, loading, error, refreshMembers, refreshWorkspace }}
+    >
       {children}
     </WorkspaceContext.Provider>
   );

@@ -40,5 +40,21 @@ export function useTags(workspaceId: string | undefined) {
     [supabase, workspaceId]
   );
 
-  return { tags, createTag, reload: load };
+  const updateTag = useCallback(
+    async (id: string, patch: Partial<Pick<Tables<'tags'>, 'name' | 'color'>>) => {
+      const { data, error } = await supabase.from('tags').update(patch).eq('id', id).select().single();
+      return { data, error };
+    },
+    [supabase]
+  );
+
+  const deleteTag = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from('tags').delete().eq('id', id);
+      return { error };
+    },
+    [supabase]
+  );
+
+  return { tags, createTag, updateTag, deleteTag, reload: load };
 }
