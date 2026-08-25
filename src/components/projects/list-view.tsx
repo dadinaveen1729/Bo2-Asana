@@ -104,7 +104,7 @@ function fieldColPx(type: CustomField['type']) {
   }
 }
 
-const NAME_COL = 'minmax(240px,1fr)';
+const NAME_COL = 'minmax(240px,480px)';
 const ASSIGNEE_COL = '64px';
 const PRIORITY_COL = '108px';
 const DUE_DATE_COL = '100px';
@@ -684,13 +684,16 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
         <div className="flex items-center px-6 py-1.5">
           <div className="w-[14px] shrink-0" />
           <div className="w-4 shrink-0" />
-          <div className="grid min-w-0 flex-1 items-center gap-x-2" style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}>
-            <span className="block truncate pl-1 text-[13px] font-medium text-ink-faint">Name</span>
-            <span className="text-[13px] font-medium text-ink-faint">Assignee</span>
-            <span className="text-[13px] font-medium text-ink-faint">Priority</span>
-            <span className="text-[13px] font-medium text-ink-faint">Due date</span>
+          <div
+            className="grid min-w-0 flex-none items-center divide-x divide-border"
+            style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}
+          >
+            <span className="block truncate pl-1 pr-2 text-[13px] font-medium text-ink-faint">Name</span>
+            <span className="px-2 text-[13px] font-medium text-ink-faint">Assignee</span>
+            <span className="px-2 text-[13px] font-medium text-ink-faint">Priority</span>
+            <span className="px-2 text-[13px] font-medium text-ink-faint">Due date</span>
             {visibleFields.map((f) => (
-              <span key={f.id} className="block truncate text-[13px] font-medium text-ink-faint">
+              <span key={f.id} className="block truncate px-2 text-[13px] font-medium text-ink-faint">
                 {f.name}
               </span>
             ))}
@@ -757,7 +760,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                         return (
                           <div
                             key={id}
-                            className="group grid items-stretch border-b border-border last:border-b-0 hover:bg-surface-hover"
+                            className="group grid items-stretch divide-x divide-border border-b border-border last:border-b-0 hover:bg-surface-hover"
                             style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}
                           >
                             <div className="min-w-0">

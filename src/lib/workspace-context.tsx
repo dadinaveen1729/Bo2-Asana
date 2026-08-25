@@ -70,6 +70,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       let { data: membership } = await supabase
         .from('workspace_members')
         .select('role, workspaces(*)')
+        .eq('user_id', authUser.id)
         .limit(1)
         .maybeSingle();
 
@@ -81,6 +82,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
             .from('workspace_members')
             .select('role, workspaces(*)')
             .eq('workspace_id', defaultWs.id)
+            .eq('user_id', authUser.id)
             .maybeSingle();
           membership = retry.data as any;
         }

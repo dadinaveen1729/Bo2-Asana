@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Check, Copy, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useWorkspace } from '@/lib/workspace-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -37,6 +38,7 @@ export function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       setError(error.message);
       return;
     }
+    toast.success(`Invite email sent to ${email.trim()}`);
     setEmail('');
   }
 

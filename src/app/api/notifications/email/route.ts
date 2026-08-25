@@ -9,6 +9,7 @@ const SUBJECT_BY_TYPE: Record<string, (actor: string) => string> = {
   comment: (a) => `${a} commented on your task`,
   added_to_project: (a) => `${a} added you to a project`,
   dependency_cleared: () => 'A task you were waiting on is done',
+  invited: (a) => `${a} invited you to BoostFlow`,
 };
 
 export async function POST(req: Request) {
@@ -32,7 +33,8 @@ export async function POST(req: Request) {
 
   const subjectFn = SUBJECT_BY_TYPE[type] || (() => 'You have a new update in BoostFlow');
   const subject = subjectFn(actorName || 'Someone');
-  const link = taskId ? `${APP_URL}/tasks/${taskId}` : APP_URL;
+  const link = type === 'invited' ? `${APP_URL}/signup` : taskId ? `${APP_URL}/tasks/${taskId}` : APP_URL;
+  const cta = type === 'invited' ? 'Create your account' : 'Open in BoostFlow';
 
   try {
     const transporter = nodemailer.createTransport({ host, port, secure: false, auth: { user, pass } });
@@ -46,7 +48,7 @@ export async function POST(req: Request) {
           <p style="font-size: 15px; color: #101828;">Hi ${recipientName || ''},</p>
           <p style="font-size: 15px; color: #101828;"><strong>${subject}</strong></p>
           ${message ? `<p style="font-size: 14px; color: #667085; padding: 12px; background: #F9FAFB; border-radius: 8px;">${message}</p>` : ''}
-          <a href="${link}" style="display: inline-block; margin-top: 12px; padding: 10px 18px; background: #FC636B; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Open in BoostFlow</a>
+          <a href="${link}" style="display: inline-block; margin-top: 12px; padding: 10px 18px; background: #FC636B; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">${cta}</a>
         </div>
       `,
     });
