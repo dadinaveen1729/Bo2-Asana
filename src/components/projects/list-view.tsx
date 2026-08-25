@@ -7,17 +7,24 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import {
-  ArrowUpDown, Check, ChevronDown, ChevronRight, Filter, Layers, MoreHorizontal, Plus,
-  Search, SlidersHorizontal, Trash2, X,
+  ArrowUpDown, Check, ChevronDown, ChevronRight, Copy, ExternalLink, Filter, Flag,
+  GitBranch, Layers, Link2, ListPlus, MoreHorizontal, Plus, Search, SlidersHorizontal,
+  SquareCheck, Target, Trash2, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspace } from '@/lib/workspace-context';
 import { useSections } from '@/hooks/use-sections';
 import { useProjectTasks, type ProjectTask } from '@/hooks/use-tasks';
 import { useCustomFields, type CustomField } from '@/hooks/use-custom-fields';
+import { useTaskPanel } from '@/lib/task-panel-context';
+import { useUndo } from '@/lib/undo-context';
 import { TaskRow } from '@/components/tasks/task-row';
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub,
+  ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar } from '@/components/ui/avatar';
@@ -98,6 +105,8 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
   const { sections, createSection, renameSection, deleteSection } = useSections(projectId);
   const { tasks, createTask, moveTask, toggleComplete } = useProjectTasks(projectId);
   const { fields } = useCustomFields(projectId);
+  const { openTask } = useTaskPanel();
+  const { pushUndo } = useUndo();
   const supabase = useMemo(() => createClient(), []);
 
   const [columns, setColumns] = useState<Record<string, string[]>>({});
@@ -349,6 +358,131 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
     setFilterPriorities(new Set());
     setFilterAssignees(new Set());
     setFilterDue('any');
+  }
+
+  async function toggleCompleteWithUndo(t: ProjectTask) {
+    const prev = t.completed;
+    await toggleComplete(t.id, !prev);
+    pushUndo({
+      label: `mark "${t.name}" ${!prev ? 'complete' : 'incomplete'}`,
+      undo: () => toggleComplete(t.id, prev),
+      redo: () => toggleComplete(t.id, !prev),
+    });
+  }
+
+  async function duplicateTask(t: ProjectTask) {
+    if (!workspace || !user) return;
+    const { data: copy, error } = await supabase
+      .from('tasks')
+      .insert({
+        workspace_id: workspace.id,
+        name: `${t.name} (copy)`,
+        notes: t.notes,
+        priority: t.priority,
+        due_date: t.due_date,
+        assignee_id: t.assignee_id,
+        is_milestone: t.is_milestone,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+    if (error || !copy) {
+      toast.error(error?.message || 'Could not duplicate task.');
+      return;
+    }
+    const sectionTasks = tasks.filter((x) => x.section_id === t.section_id);
+    const maxPos = sectionTasks.length ? Math.max(...sectionTasks.map((x) => x.tp_position)) : 0;
+    await supabase.from('task_projects').insert({ task_id: copy.id, project_id: projectId, section_id: t.section_id, position: maxPos + 1000 });
+    if (t.tags.length) {
+      await supabase.from('task_tags').insert(t.tags.map((tag) => ({ task_id: copy.id, tag_id: tag.id })));
+    }
+    toast.success('Task duplicated');
+  }
+
+  async function createFollowUp(t: ProjectTask) {
+    if (!workspace || !user) return;
+    const { data: followUp, error } = await supabase
+      .from('tasks')
+      .insert({
+        workspace_id: workspace.id,
+        name: `Follow-up: ${t.name}`,
+        assignee_id: t.assignee_id,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+    if (error || !followUp) {
+      toast.error(error?.message || 'Could not create follow-up task.');
+      return;
+    }
+    const sectionTasks = tasks.filter((x) => x.section_id === t.section_id);
+    const maxPos = sectionTasks.length ? Math.max(...sectionTasks.map((x) => x.tp_position)) : 0;
+    await supabase.from('task_projects').insert({ task_id: followUp.id, project_id: projectId, section_id: t.section_id, position: maxPos + 1000 });
+    // A genuine step beyond stock Asana: the follow-up is actually linked as
+    // waiting on the original, so it shows up in the task panel's
+    // Dependencies section instead of just being two unrelated tasks.
+    await supabase.from('task_dependencies').insert({ task_id: followUp.id, depends_on_task_id: t.id, type: 'waiting_on' });
+    toast.success('Follow-up task created');
+    openTask(followUp.id);
+  }
+
+  async function toggleMilestone(t: ProjectTask) {
+    const { error } = await supabase.from('tasks').update({ is_milestone: !t.is_milestone }).eq('id', t.id);
+    if (error) toast.error(error.message);
+  }
+
+  async function moveTaskToSection(t: ProjectTask, sectionId: string) {
+    const sectionTasks = tasks.filter((x) => x.section_id === sectionId);
+    const maxPos = sectionTasks.length ? Math.max(...sectionTasks.map((x) => x.tp_position)) : 0;
+    await moveTask(t.id, sectionId, maxPos + 1000);
+  }
+
+  function copyTaskLink(t: ProjectTask) {
+    navigator.clipboard.writeText(`${window.location.origin}/tasks/${t.id}`);
+    toast.success('Link copied');
+  }
+
+  function openInNewTab(t: ProjectTask) {
+    window.open(`${window.location.origin}/tasks/${t.id}`, '_blank', 'noopener,noreferrer');
+  }
+
+  async function deleteTaskWithUndo(t: ProjectTask) {
+    const tp = { section_id: t.section_id, position: t.tp_position };
+    const tagIds = t.tags.map((tag) => tag.id);
+    const { error } = await supabase.from('tasks').delete().eq('id', t.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Deleted "${t.name}"`);
+
+    let currentId = t.id;
+    pushUndo({
+      label: `delete "${t.name}"`,
+      undo: async () => {
+        const { data: restored, error: restoreError } = await supabase
+          .from('tasks')
+          .insert({
+            workspace_id: t.workspace_id,
+            name: t.name,
+            notes: t.notes,
+            priority: t.priority,
+            due_date: t.due_date,
+            assignee_id: t.assignee_id,
+            is_milestone: t.is_milestone,
+            created_by: t.created_by,
+          })
+          .select()
+          .single();
+        if (restoreError || !restored) throw new Error(restoreError?.message || 'Could not restore task.');
+        currentId = restored.id;
+        await supabase.from('task_projects').insert({ task_id: restored.id, project_id: projectId, section_id: tp.section_id, position: tp.position });
+        if (tagIds.length) await supabase.from('task_tags').insert(tagIds.map((tagId) => ({ task_id: restored.id, tag_id: tagId })));
+      },
+      redo: async () => {
+        await supabase.from('tasks').delete().eq('id', currentId);
+      },
+    });
   }
 
   return (
@@ -604,7 +738,71 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                         return (
                           <div key={id} className="flex items-stretch">
                             <div className="min-w-0 flex-1">
-                              <TaskRow task={t} onToggleComplete={(v) => toggleComplete(id, v)} dragDisabled={!dndEnabled} />
+                              <ContextMenu>
+                                <ContextMenuTrigger asChild>
+                                  <div>
+                                    <TaskRow task={t} onToggleComplete={() => toggleCompleteWithUndo(t)} dragDisabled={!dndEnabled} />
+                                  </div>
+                                </ContextMenuTrigger>
+                                <ContextMenuContent>
+                                  <ContextMenuItem onSelect={() => duplicateTask(t)}>
+                                    <Copy size={14} /> Duplicate task
+                                  </ContextMenuItem>
+                                  <ContextMenuItem onSelect={() => createFollowUp(t)}>
+                                    <GitBranch size={14} /> Create follow-up task
+                                  </ContextMenuItem>
+                                  <ContextMenuItem onSelect={() => toggleCompleteWithUndo(t)}>
+                                    <SquareCheck size={14} /> {t.completed ? 'Mark incomplete' : 'Mark complete'}
+                                  </ContextMenuItem>
+                                  <ContextMenuItem onSelect={() => openTask(t.id)}>
+                                    <ListPlus size={14} /> Add subtask
+                                  </ContextMenuItem>
+                                  <ContextMenuSub>
+                                    <ContextMenuSubTrigger>
+                                      <Flag size={14} /> Convert to
+                                    </ContextMenuSubTrigger>
+                                    <ContextMenuSubContent>
+                                      <ContextMenuItem onSelect={() => toggleMilestone(t)}>
+                                        <Target size={14} />
+                                        {t.is_milestone ? 'Task' : 'Milestone'}
+                                        {t.is_milestone && <Check size={13} className="ml-auto text-brand-500" />}
+                                      </ContextMenuItem>
+                                    </ContextMenuSubContent>
+                                  </ContextMenuSub>
+                                  {sections.length > 0 && (
+                                    <ContextMenuSub>
+                                      <ContextMenuSubTrigger>
+                                        <Layers size={14} /> Move to section
+                                      </ContextMenuSubTrigger>
+                                      <ContextMenuSubContent>
+                                        {sections.map((s) => (
+                                          <ContextMenuItem key={s.id} onSelect={() => moveTaskToSection(t, s.id)}>
+                                            {s.id === t.section_id && <Check size={13} className="text-brand-500" />}
+                                            {s.name}
+                                          </ContextMenuItem>
+                                        ))}
+                                      </ContextMenuSubContent>
+                                    </ContextMenuSub>
+                                  )}
+                                  <ContextMenuSeparator />
+                                  <ContextMenuItem onSelect={() => openTask(t.id)}>
+                                    <ExternalLink size={14} /> Open task details
+                                  </ContextMenuItem>
+                                  <ContextMenuItem onSelect={() => openInNewTab(t)}>
+                                    <ExternalLink size={14} /> Open in new tab
+                                  </ContextMenuItem>
+                                  <ContextMenuItem onSelect={() => copyTaskLink(t)}>
+                                    <Link2 size={14} /> Copy task link
+                                  </ContextMenuItem>
+                                  <ContextMenuSeparator />
+                                  <ContextMenuItem
+                                    className="text-red-600 data-[highlighted]:bg-red-50"
+                                    onSelect={() => deleteTaskWithUndo(t)}
+                                  >
+                                    <Trash2 size={14} /> Delete task
+                                  </ContextMenuItem>
+                                </ContextMenuContent>
+                              </ContextMenu>
                             </div>
                             {visibleFields.map((f) => (
                               <div

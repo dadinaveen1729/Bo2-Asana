@@ -7,6 +7,7 @@ import { Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { WorkspaceProvider, useWorkspace } from '@/lib/workspace-context';
 import { TaskPanelProvider } from '@/lib/task-panel-context';
+import { UndoProvider } from '@/lib/undo-context';
 import { Sidebar } from '@/components/app-shell/sidebar';
 import { TopBar } from '@/components/app-shell/topbar';
 import { TaskDetailPanel } from '@/components/tasks/task-detail-panel';
@@ -95,9 +96,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <WorkspaceProvider>
       <TooltipProvider delayDuration={300}>
-        <TaskPanelProvider>
-          <Shell>{children}</Shell>
-        </TaskPanelProvider>
+        <UndoProvider>
+          <TaskPanelProvider>
+            <Shell>{children}</Shell>
+          </TaskPanelProvider>
+        </UndoProvider>
       </TooltipProvider>
     </WorkspaceProvider>
   );
