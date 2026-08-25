@@ -74,7 +74,8 @@ export type Database = {
           file_size: number | null
           id: string
           mime_type: string | null
-          task_id: string
+          project_id: string | null
+          task_id: string | null
           uploaded_by: string | null
         }
         Insert: {
@@ -84,7 +85,8 @@ export type Database = {
           file_size?: number | null
           id?: string
           mime_type?: string | null
-          task_id: string
+          project_id?: string | null
+          task_id?: string | null
           uploaded_by?: string | null
         }
         Update: {
@@ -94,10 +96,18 @@ export type Database = {
           file_size?: number | null
           id?: string
           mime_type?: string | null
-          task_id?: string
+          project_id?: string | null
+          task_id?: string | null
           uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attachments_task_id_fkey"
             columns: ["task_id"]

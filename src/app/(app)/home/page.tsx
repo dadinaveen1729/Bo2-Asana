@@ -26,8 +26,8 @@ import { PROJECT_STATUS_META, isOverdue, cn } from '@/lib/utils';
 import { isThisWeek, format } from 'date-fns';
 import type { MyTask } from '@/hooks/use-my-tasks';
 
-function greeting() {
-  const h = new Date().getHours();
+function greeting(now: Date) {
+  const h = now.getHours();
   if (h < 12) return 'Good morning';
   if (h < 18) return 'Good afternoon';
   return 'Good evening';
@@ -305,6 +305,16 @@ export default function HomePage() {
   const [layout, setLayout] = useState<HomeLayoutSection[]>(DEFAULT_HOME_LAYOUT);
   const [layoutLoaded, setLayoutLoaded] = useState(false);
 
+  // Boost Oxygen has people across time zones, and the server renders this
+  // page once on its own clock — computing "now" during render would show
+  // the server's local time/greeting to everyone until hydration papers
+  // over it. Deferring to a client-only effect guarantees the greeting and
+  // date always reflect the viewer's own browser, not the server's.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
+
   useEffect(() => {
     if (!user?.id) return;
     setLayout(loadHomeLayout(user.id));
@@ -516,8 +526,8 @@ export default function HomePage() {
     <div className="mx-auto max-w-5xl px-6 py-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-ink-muted">{format(new Date(), 'EEEE, MMMM d')}</p>
-          <h1 className="mt-1 text-[26px] font-semibold text-ink">{greeting()}, {firstName}</h1>
+          <p className="text-sm text-ink-muted">{now ? format(now, 'EEEE, MMMM d') : ' '}</p>
+          <h1 className="mt-1 text-[26px] font-semibold text-ink">{now ? greeting(now) : 'Welcome'}, {firstName}</h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 pt-1">

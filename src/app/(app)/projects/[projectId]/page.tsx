@@ -21,6 +21,7 @@ import { ProjectMembersPopover } from '@/components/projects/project-members-pop
 import { AutomationRulesDialog } from '@/components/projects/automation-rules-dialog';
 import { Avatar, AvatarStack } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { PROJECT_STATUS_META, cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -53,6 +54,8 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
   const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const view = (searchParams.get('view') as (typeof TABS)[number]['key']) || (project?.default_view as any) || 'list';
 
@@ -74,6 +77,18 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
   async function updateProject(patch: Record<string, unknown>) {
     const { error } = await supabase.from('projects').update(patch).eq('id', project!.id);
     if (error) toast.error(error.message);
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    const { error } = await supabase.from('projects').delete().eq('id', project!.id);
+    setDeleting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success('Project deleted');
+    router.push('/projects');
   }
 
   return (
@@ -151,6 +166,12 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
                 >
                   Archive project
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 data-[highlighted]:bg-red-50"
+                  onSelect={() => setDeleteOpen(true)}
+                >
+                  Delete project
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -189,6 +210,31 @@ function ProjectPageInner({ params }: { params: { projectId: string } }) {
         onCreate={(name, type, options) => (workspace ? createField(workspace.id, name, type, options) : Promise.resolve(null))}
       />
       <AutomationRulesDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} projectId={project.id} />
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete "{project.name}"?</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 py-2 text-sm text-ink-muted">
+            This permanently deletes the project and every task, section, and attachment in it. This can't be undone —
+            if you just want to hide it instead, use Archive.
+          </div>
+          <DialogFooter>
+            <button onClick={() => setDeleteOpen(false)} className="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-muted hover:bg-surface-hover">
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting && <Loader2 size={14} className="animate-spin" />}
+              Delete permanently
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

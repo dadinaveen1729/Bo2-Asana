@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Download, File as FileIcon, FileArchive, FileSpreadsheet, FileText,
-  Image as ImageIcon, Loader2, Paperclip, Trash2,
+  Image as ImageIcon, Loader2, Paperclip, Trash2, Upload,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +17,8 @@ type FileRow = Tables<'attachments'> & {
   task: Pick<Tables<'tasks'>, 'id' | 'name'> | null;
   uploader: Tables<'profiles'> | null;
 };
+
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 function formatBytes(bytes: number | null) {
   if (bytes === null || bytes === undefined) return '';
@@ -42,35 +44,75 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data: tp, error: tpErr } = await supabase.from('task_projects').select('task_id').eq('project_id', projectId);
-    if (tpErr) {
-      toast.error(tpErr.message);
+    const [tpRes, projectFilesRes] = await Promise.all([
+      supabase.from('task_projects').select('task_id').eq('project_id', projectId),
+      supabase
+        .from('attachments')
+        .select('*, task:tasks(id, name), uploader:profiles!attachments_uploaded_by_fkey(*)')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false }),
+    ]);
+    if (tpRes.error) {
+      toast.error(tpRes.error.message);
       setLoading(false);
       return;
     }
-    const taskIds = (tp || []).map((r) => r.task_id);
-    if (taskIds.length === 0) {
-      setFiles([]);
+    const taskIds = (tpRes.data || []).map((r) => r.task_id);
+    const taskFilesRes = taskIds.length
+      ? await supabase
+          .from('attachments')
+          .select('*, task:tasks(id, name), uploader:profiles!attachments_uploaded_by_fkey(*)')
+          .in('task_id', taskIds)
+          .order('created_at', { ascending: false })
+      : { data: [], error: null };
+    if (taskFilesRes.error) {
+      toast.error(taskFilesRes.error.message);
       setLoading(false);
       return;
     }
-    const { data, error } = await supabase
-      .from('attachments')
-      .select('*, task:tasks(id, name), uploader:profiles!attachments_uploaded_by_fkey(*)')
-      .in('task_id', taskIds)
-      .order('created_at', { ascending: false });
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
-    }
-    setFiles((data as any) || []);
+    const merged = [...((projectFilesRes.data as any[]) || []), ...((taskFilesRes.data as any[]) || [])].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    setFiles(merged);
     setLoading(false);
   }, [projectId]);
+
+  async function handleUpload(file: File | undefined) {
+    if (!file || !user) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error('File must be under 25MB.');
+      return;
+    }
+    setUploading(true);
+    const supabase = createClient();
+    const path = `project/${projectId}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file);
+    if (uploadError) {
+      toast.error(uploadError.message);
+      setUploading(false);
+      return;
+    }
+    const { error: insertError } = await supabase.from('attachments').insert({
+      project_id: projectId,
+      file_name: file.name,
+      file_path: path,
+      file_size: file.size,
+      mime_type: file.type || null,
+      uploaded_by: user.id,
+    });
+    setUploading(false);
+    if (insertError) {
+      toast.error(insertError.message);
+      return;
+    }
+    toast.success('File uploaded');
+  }
 
   useEffect(() => {
     load();
@@ -128,11 +170,27 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
 
   return (
     <div className="px-6 py-4">
+      <div className="mb-4 flex justify-end">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => { handleUpload(e.target.files?.[0]); e.target.value = ''; }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+        >
+          {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+          {uploading ? 'Uploading…' : 'Add file'}
+        </button>
+      </div>
       {files.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Paperclip size={28} className="mb-3 text-ink-faint" />
           <p className="text-sm font-medium text-ink">No files yet</p>
-          <p className="mt-1 text-[13px] text-ink-faint">Files attached to tasks in this project will show up here.</p>
+          <p className="mt-1 text-[13px] text-ink-faint">Add one above, or attach files to individual tasks — everything shows up here.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border">

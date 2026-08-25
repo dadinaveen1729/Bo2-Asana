@@ -307,7 +307,20 @@ export function Sidebar() {
                 <LogOut size={15} /> Sign out
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <p className="px-2.5 py-1 text-[11px] text-ink-faint">Built by Naveen Dadi</p>
+              <p className="px-2.5 py-1 text-[11px] text-ink-faint">
+                Built with <span className="text-red-500">❤</span> by Naveen Dadi
+              </p>
+              <p className="px-2.5 pb-1 text-[11px] text-ink-faint">
+                Developed by{' '}
+                <a
+                  href="https://americanprimellc.com/about"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                >
+                  American Prime LLC
+                </a>
+              </p>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
