@@ -94,8 +94,13 @@ export function Sidebar() {
       )}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-screen w-[248px] shrink-0 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-out',
-          'lg:static lg:z-auto lg:translate-x-0',
+          // h-screen (100vh) renders taller than what's actually visible on
+          // mobile browsers once the address-bar/toolbar chrome is factored
+          // in, which pushed the bottom user-menu section (Profile, admin,
+          // sign out) below the visible area with no way to scroll to it --
+          // h-dvh tracks the real visible viewport instead.
+          'fixed inset-y-0 left-0 z-50 flex h-dvh w-[248px] shrink-0 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-out',
+          'lg:static lg:z-auto lg:h-screen lg:translate-x-0',
           mobileOpen && 'translate-x-0'
         )}
       >

@@ -20,7 +20,10 @@ export function SheetContent({
       {overlay && <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/30 data-[state=open]:animate-fade-in" />}
       <DialogPrimitive.Content
         className={cn(
-          'fixed right-0 top-0 z-50 flex h-screen flex-col border-l border-border bg-white shadow-2xl focus:outline-none',
+          // h-dvh (not h-screen/100vh) so this doesn't render taller than
+          // what's actually visible on mobile once browser chrome is
+          // factored in -- same bug class as the sidebar drawer.
+          'fixed right-0 top-0 z-50 flex h-dvh flex-col border-l border-border bg-white shadow-2xl focus:outline-none',
           'data-[state=open]:animate-slide-in',
           className
         )}

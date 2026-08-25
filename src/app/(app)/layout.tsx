@@ -68,7 +68,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-canvas">
+      <div className="flex h-dvh w-screen items-center justify-center bg-canvas">
         <Loader2 className="animate-spin text-brand-500" size={22} />
       </div>
     );
@@ -76,7 +76,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   if (error || !workspace) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-2 bg-canvas px-6 text-center">
+      <div className="flex h-dvh w-screen flex-col items-center justify-center gap-2 bg-canvas px-6 text-center">
         <p className="text-sm font-medium text-ink">{error || 'No workspace found.'}</p>
         <p className="text-sm text-ink-muted">Try refreshing, or contact a workspace admin.</p>
       </div>
@@ -88,7 +88,11 @@ function Shell({ children }: { children: React.ReactNode }) {
       <MobileNavContext.Provider value={{ open: mobileNavOpen, setOpen: setMobileNavOpen }}>
         {user && <NotificationListener userId={user.id} />}
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex h-screen w-screen overflow-hidden bg-canvas">
+          {/* h-dvh, not h-screen: 100vh overshoots the real visible area on
+              mobile browsers (address-bar/toolbar chrome eats into it), and
+              with overflow-hidden here that overshoot just gets clipped --
+              this was cutting off the sidebar's bottom account section. */}
+          <div className="flex h-dvh w-screen overflow-hidden bg-canvas">
             <Sidebar />
             <div className="flex min-w-0 flex-1 flex-col">
               <TopBar />
