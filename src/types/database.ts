@@ -1142,6 +1142,7 @@ export type Database = {
           due_date: string | null
           due_time: string | null
           id: string
+          imported: boolean
           is_milestone: boolean
           name: string
           notes: string | null
@@ -1162,6 +1163,7 @@ export type Database = {
           due_date?: string | null
           due_time?: string | null
           id?: string
+          imported?: boolean
           is_milestone?: boolean
           name: string
           notes?: string | null
@@ -1182,6 +1184,7 @@ export type Database = {
           due_date?: string | null
           due_time?: string | null
           id?: string
+          imported?: boolean
           is_milestone?: boolean
           name?: string
           notes?: string | null

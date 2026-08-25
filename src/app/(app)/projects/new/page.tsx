@@ -59,7 +59,7 @@ function TemplateGallery() {
         team_id: teamId || null,
         name: template.name,
         color: template.color,
-        privacy: 'public',
+        privacy: 'private',
         created_by: user.id,
       })
       .select()

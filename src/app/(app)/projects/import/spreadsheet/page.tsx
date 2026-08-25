@@ -105,7 +105,7 @@ export default function SpreadsheetImportPage() {
         team_id: teamId === 'none' ? null : teamId,
         name: projectName.trim(),
         color: colorForIndex(Math.floor(Math.random() * 10)),
-        privacy: 'public',
+        privacy: 'private',
         created_by: user.id,
       })
       .select()
@@ -176,6 +176,9 @@ export default function SpreadsheetImportPage() {
           assignee_id: assigneeId,
           created_by: user.id,
           position: idx,
+          // Historical data, not a live assignment -- suppresses the
+          // 'assigned' notification/email trigger (see migration 022).
+          imported: true,
         },
         sectionId,
       });

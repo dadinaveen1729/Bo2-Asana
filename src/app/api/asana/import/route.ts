@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         name: project.name,
         color: asanaColorToHex(project.color, colorForIndex(0)),
         description: project.notes || null,
-        privacy: 'public',
+        privacy: 'private',
         created_by: user.id,
       })
       .select()
@@ -92,6 +92,12 @@ export async function POST(req: Request) {
         assignee_id: assigneeId,
         created_by: user.id,
         position: position++,
+        // Historical data being brought in, not a live assignment happening
+        // right now -- suppresses the 'assigned' notification/email the
+        // task-insert trigger would otherwise fire once per task (see
+        // migration 022; importing N of someone's tasks used to send them
+        // N assignment emails all at once).
+        imported: true,
         __sectionGid: t.memberships.find((m) => m.section)?.section?.gid || null,
       });
     }
