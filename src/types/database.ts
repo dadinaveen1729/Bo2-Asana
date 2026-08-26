@@ -180,26 +180,32 @@ export type Database = {
       }
       comments: {
         Row: {
+          asana_story_gid: string | null
           author_id: string | null
           body: string
           created_at: string
           id: string
+          imported: boolean
           task_id: string
           updated_at: string
         }
         Insert: {
+          asana_story_gid?: string | null
           author_id?: string | null
           body: string
           created_at?: string
           id?: string
+          imported?: boolean
           task_id: string
           updated_at?: string
         }
         Update: {
+          asana_story_gid?: string | null
           author_id?: string | null
           body?: string
           created_at?: string
           id?: string
+          imported?: boolean
           task_id?: string
           updated_at?: string
         }
@@ -1136,6 +1142,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          asana_gid: string | null
           assignee_id: string | null
           completed: boolean
           completed_at: string | null
@@ -1157,6 +1164,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          asana_gid?: string | null
           assignee_id?: string | null
           completed?: boolean
           completed_at?: string | null
@@ -1178,6 +1186,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          asana_gid?: string | null
           assignee_id?: string | null
           completed?: boolean
           completed_at?: string | null

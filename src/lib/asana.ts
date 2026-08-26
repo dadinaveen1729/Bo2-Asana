@@ -43,8 +43,18 @@ export interface AsanaTask {
   notes: string | null;
   due_on: string | null;
   completed: boolean;
+  created_at: string;
+  completed_at: string | null;
   assignee: { gid: string; name: string; email?: string } | null;
   memberships: { project: { gid: string }; section: { gid: string; name: string } | null }[];
+}
+
+export interface AsanaStory {
+  gid: string;
+  text: string | null;
+  created_at: string;
+  type: string;
+  created_by: { gid: string; name: string; email?: string } | null;
 }
 
 export async function listWorkspaces(token: string): Promise<AsanaWorkspace[]> {
@@ -81,7 +91,19 @@ export async function listProjectMembers(token: string, projectGid: string): Pro
 
 export async function listTasks(token: string, projectGid: string): Promise<AsanaTask[]> {
   const json = await asanaFetch(
-    `/tasks?project=${projectGid}&opt_fields=name,notes,due_on,completed,assignee.email,assignee.name,memberships.project,memberships.section.name&limit=100`,
+    `/tasks?project=${projectGid}&opt_fields=name,notes,due_on,completed,created_at,completed_at,assignee.email,assignee.name,memberships.project,memberships.section.name&limit=100`,
+    token
+  );
+  return json.data;
+}
+
+// Asana's "stories" feed on a task mixes real human comments with
+// system-generated entries (assigned, marked complete, section changed,
+// ...); `type: 'comment'` is what distinguishes the former, which is all
+// an import cares about -- see callers for the filter.
+export async function listTaskStories(token: string, taskGid: string): Promise<AsanaStory[]> {
+  const json = await asanaFetch(
+    `/tasks/${taskGid}/stories?opt_fields=text,created_at,type,created_by.name,created_by.email&limit=100`,
     token
   );
   return json.data;

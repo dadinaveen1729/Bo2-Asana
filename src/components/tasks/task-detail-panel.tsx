@@ -426,6 +426,9 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
                     <div className="flex items-baseline gap-2">
                       <span className="text-sm font-semibold text-ink">{item.data.author?.full_name || item.data.author?.email}</span>
                       <span className="text-[11px] text-ink-faint">{formatDistanceToNow(new Date(item.at), { addSuffix: true })}</span>
+                      {item.data.imported && (
+                        <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium text-ink-faint">Imported from Asana</span>
+                      )}
                     </div>
                     <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink">{item.data.body}</p>
                   </div>

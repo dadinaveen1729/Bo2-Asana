@@ -21,6 +21,7 @@ type ImportResult = {
   tasksImported?: number;
   membersShared?: number;
   alreadyImported?: boolean;
+  commentsImported?: number;
 };
 
 export default function ImportProjectsPage() {
@@ -121,6 +122,7 @@ export default function ImportProjectsPage() {
                     tasksImported: json.tasksImported,
                     membersShared: json.membersShared,
                     alreadyImported: json.alreadyImported,
+                    commentsImported: json.commentsImported,
                   }
                 : r
             )
@@ -242,12 +244,14 @@ export default function ImportProjectsPage() {
                   {r.status === 'done' && r.alreadyImported && (
                     <p className="text-xs text-ink-faint">
                       Already imported — {r.membersShared ? `added ${r.membersShared} new teammate${r.membersShared === 1 ? '' : 's'}` : 'sharing already up to date'}
+                      {!!r.commentsImported && `, pulled in ${r.commentsImported} comment${r.commentsImported === 1 ? '' : 's'} from Asana`}
                     </p>
                   )}
                   {r.status === 'done' && !r.alreadyImported && (
                     <p className="text-xs text-ink-faint">
                       {r.tasksImported} tasks imported
                       {!!r.membersShared && ` · shared with ${r.membersShared} teammate${r.membersShared === 1 ? '' : 's'}`}
+                      {!!r.commentsImported && ` · ${r.commentsImported} comment${r.commentsImported === 1 ? '' : 's'} pulled in`}
                     </p>
                   )}
                   {r.status === 'error' && <p className="text-xs text-red-600">{r.message}</p>}
