@@ -65,6 +65,20 @@ export async function listSections(token: string, projectGid: string): Promise<A
   return json.data;
 }
 
+export interface AsanaMember {
+  gid: string;
+  name: string;
+  email?: string;
+}
+
+// Who this project is actually shared with in Asana -- used so an import
+// can recreate that same sharing in Boost Hub instead of leaving the
+// project visible to nobody but whoever ran the import.
+export async function listProjectMembers(token: string, projectGid: string): Promise<AsanaMember[]> {
+  const json = await asanaFetch(`/projects/${projectGid}?opt_fields=members.name,members.email`, token);
+  return json.data.members || [];
+}
+
 export async function listTasks(token: string, projectGid: string): Promise<AsanaTask[]> {
   const json = await asanaFetch(
     `/tasks?project=${projectGid}&opt_fields=name,notes,due_on,completed,assignee.email,assignee.name,memberships.project,memberships.section.name&limit=100`,

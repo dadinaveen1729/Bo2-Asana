@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { listSections, listTasks, asanaColorToHex, AsanaError, type AsanaProject } from '@/lib/asana';
+import { listSections, listTasks, listProjectMembers, asanaColorToHex, AsanaError, type AsanaProject } from '@/lib/asana';
 import { colorForIndex } from '@/lib/utils';
 
 export const maxDuration = 60;
@@ -22,9 +22,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const [asanaSections, asanaTasks] = await Promise.all([
+    const [asanaSections, asanaTasks, asanaMembers] = await Promise.all([
       listSections(token, project.gid),
       listTasks(token, project.gid),
+      listProjectMembers(token, project.gid),
     ]);
 
     // Match Asana assignee emails to existing Boost Hub profiles in this workspace.
@@ -57,6 +58,35 @@ export async function POST(req: Request) {
     }
 
     await supabase.from('project_members').insert({ project_id: newProject.id, user_id: user.id, role: 'owner' });
+
+    // Projects default to private (see migration 022), which correctly
+    // stopped every import from leaking to the whole workspace -- but on
+    // its own that also meant nobody except whoever ran the import could
+    // see it, even people the project was genuinely shared with in Asana.
+    // Recreate that same sharing here: match Asana's project members to
+    // existing Boost Hub accounts by email (same technique already used
+    // for task assignees below) and add each match as a project member,
+    // so the import doesn't quietly strand everyone else's access.
+    const addedMemberIds = new Set([user.id]);
+    let membersShared = 0;
+    let unmatchedMembers = 0;
+    for (const m of asanaMembers) {
+      const email = m.email?.toLowerCase();
+      const matchedUserId = email ? emailToUserId.get(email) : undefined;
+      if (!matchedUserId) {
+        if (email) unmatchedMembers++;
+        continue;
+      }
+      if (addedMemberIds.has(matchedUserId)) continue;
+      addedMemberIds.add(matchedUserId);
+      membersShared++;
+    }
+    const memberRowsToInsert = Array.from(addedMemberIds)
+      .filter((id) => id !== user.id)
+      .map((userId) => ({ project_id: newProject.id, user_id: userId, role: 'editor' as const }));
+    if (memberRowsToInsert.length) {
+      await supabase.from('project_members').insert(memberRowsToInsert);
+    }
 
     // Asana projects commonly have several sections that share a display name
     // (e.g. multiple "Untitled section"s), so sections must be matched by
@@ -132,6 +162,8 @@ export async function POST(req: Request) {
       sectionsImported: newSections.length,
       tasksImported: insertedTasks?.length || 0,
       unmatchedAssignees,
+      membersShared,
+      unmatchedMembers,
     });
   } catch (err: any) {
     const status = err instanceof AsanaError ? err.status : 500;

@@ -12,7 +12,15 @@ import {
 
 interface AsanaWorkspace { gid: string; name: string }
 interface AsanaProjectLite { gid: string; name: string; color: string | null; notes: string | null }
-type ImportResult = { gid: string; name: string; status: 'pending' | 'importing' | 'done' | 'error'; message?: string; projectId?: string; tasksImported?: number };
+type ImportResult = {
+  gid: string;
+  name: string;
+  status: 'pending' | 'importing' | 'done' | 'error';
+  message?: string;
+  projectId?: string;
+  tasksImported?: number;
+  membersShared?: number;
+};
 
 export default function ImportProjectsPage() {
   const router = useRouter();
@@ -103,7 +111,11 @@ export default function ImportProjectsPage() {
           setResults((rs) => rs.map((r) => (r.gid === p.gid ? { ...r, status: 'error', message: json.error } : r)));
         } else {
           setResults((rs) =>
-            rs.map((r) => (r.gid === p.gid ? { ...r, status: 'done', projectId: json.projectId, tasksImported: json.tasksImported } : r))
+            rs.map((r) =>
+              r.gid === p.gid
+                ? { ...r, status: 'done', projectId: json.projectId, tasksImported: json.tasksImported, membersShared: json.membersShared }
+                : r
+            )
           );
         }
       } catch (e: any) {
@@ -219,7 +231,12 @@ export default function ImportProjectsPage() {
                 {r.status === 'error' && <XCircle size={16} className="shrink-0 text-red-600" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-ink">{r.name}</p>
-                  {r.status === 'done' && <p className="text-xs text-ink-faint">{r.tasksImported} tasks imported</p>}
+                  {r.status === 'done' && (
+                    <p className="text-xs text-ink-faint">
+                      {r.tasksImported} tasks imported
+                      {!!r.membersShared && ` · shared with ${r.membersShared} teammate${r.membersShared === 1 ? '' : 's'}`}
+                    </p>
+                  )}
                   {r.status === 'error' && <p className="text-xs text-red-600">{r.message}</p>}
                 </div>
                 {r.status === 'done' && r.projectId && (
