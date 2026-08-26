@@ -109,6 +109,17 @@ export async function listTaskStories(token: string, taskGid: string): Promise<A
   return json.data;
 }
 
+// Subtasks don't carry project/section memberships of their own in Asana
+// (they inherit their parent's), so this omits that opt_field entirely
+// rather than returning it always-empty on AsanaTask.
+export async function listSubtasks(token: string, taskGid: string): Promise<Omit<AsanaTask, 'memberships'>[]> {
+  const json = await asanaFetch(
+    `/tasks/${taskGid}/subtasks?opt_fields=name,notes,due_on,completed,created_at,completed_at,assignee.email,assignee.name&limit=100`,
+    token
+  );
+  return json.data;
+}
+
 // Asana's project color enum has shifted over API versions and isn't fully
 // documented in one place, so this maps both the modern short names (verified
 // live against a real workspace: purple, blue, indigo, blue-green, red, none)

@@ -5,6 +5,7 @@ import {
   listTasks,
   listProjectMembers,
   listTaskStories,
+  listSubtasks,
   asanaColorToHex,
   AsanaError,
   type AsanaProject,
@@ -110,6 +111,68 @@ async function importComments(
     .upsert(rows, { onConflict: 'task_id,asana_story_gid', ignoreDuplicates: true })
     .select('id');
   return data?.length || 0;
+}
+
+// Pulls in each parent task's Asana subtasks (one level -- Asana supports
+// deeper nesting, but that's rare enough in practice not to be worth the
+// extra n+1 API calls per level within this route's time budget) and their
+// comments. Subtasks link purely via parent_task_id, no task_projects row
+// -- matches how the app's own "Add subtask" already works (see
+// addSubtask in use-task-detail.ts), so they show up nested under their
+// parent instead of as separate rows in the project's list view.
+async function importSubtasksAndComments(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  token: string,
+  workspaceId: string,
+  parentPairs: { asanaTaskGid: string; taskId: string }[],
+  emailToUserId: Map<string, string>,
+  importerId: string
+) {
+  let subtasksImported = 0;
+  let subtaskCommentsImported = 0;
+
+  await mapWithConcurrency(parentPairs, 6, async (parent) => {
+    let subtasks;
+    try {
+      subtasks = await listSubtasks(token, parent.asanaTaskGid);
+    } catch {
+      return; // best-effort -- one task's subtasks failing shouldn't sink the whole import
+    }
+    if (!subtasks.length) return;
+
+    const rows = subtasks.map((s) => {
+      const assigneeEmail = s.assignee?.email?.toLowerCase();
+      return {
+        workspace_id: workspaceId,
+        name: s.name,
+        notes: s.notes || null,
+        due_date: s.due_on,
+        completed: s.completed,
+        created_at: s.created_at,
+        completed_at: s.completed_at,
+        assignee_id: assigneeEmail ? emailToUserId.get(assigneeEmail) || null : null,
+        created_by: importerId,
+        parent_task_id: parent.taskId,
+        position: 0,
+        imported: true,
+        asana_gid: s.gid,
+      };
+    });
+
+    const { data: inserted } = await supabase
+      .from('tasks')
+      .upsert(rows, { onConflict: 'workspace_id,asana_gid', ignoreDuplicates: true })
+      .select('id, asana_gid');
+    if (!inserted?.length) return;
+    subtasksImported += inserted.length;
+
+    const commentPairs = inserted
+      .filter((row) => row.asana_gid)
+      .map((row) => ({ asanaTaskGid: row.asana_gid as string, taskId: row.id }));
+    subtaskCommentsImported += await importComments(supabase, token, commentPairs, importerId);
+  });
+
+  return { subtasksImported, subtaskCommentsImported };
 }
 
 export async function POST(req: Request) {
@@ -219,6 +282,14 @@ export async function POST(req: Request) {
           .eq('id', row.id);
       }
       const commentsImported = await importComments(supabase, token, pairs, user.id);
+      const { subtasksImported, subtaskCommentsImported } = await importSubtasksAndComments(
+        supabase,
+        token,
+        workspaceId,
+        pairs,
+        emailToUserId,
+        user.id
+      );
 
       return NextResponse.json({
         projectId: existingProject.id,
@@ -229,7 +300,8 @@ export async function POST(req: Request) {
         unmatchedAssignees: 0,
         membersShared: rowsToInsert.length,
         unmatchedMembers,
-        commentsImported,
+        commentsImported: commentsImported + subtaskCommentsImported,
+        subtasksImported,
       });
     }
 
@@ -347,14 +419,11 @@ export async function POST(req: Request) {
       }
     }
 
-    const commentsImported = insertedTasks?.length
-      ? await importComments(
-          supabase,
-          token,
-          insertedTasks.map((row, i) => ({ asanaTaskGid: asanaTasks[i].gid, taskId: row.id })),
-          user.id
-        )
-      : 0;
+    const pairs = (insertedTasks || []).map((row, i) => ({ asanaTaskGid: asanaTasks[i].gid, taskId: row.id }));
+    const commentsImported = pairs.length ? await importComments(supabase, token, pairs, user.id) : 0;
+    const { subtasksImported, subtaskCommentsImported } = pairs.length
+      ? await importSubtasksAndComments(supabase, token, workspaceId, pairs, emailToUserId, user.id)
+      : { subtasksImported: 0, subtaskCommentsImported: 0 };
 
     return NextResponse.json({
       projectId: newProject.id,
@@ -364,7 +433,8 @@ export async function POST(req: Request) {
       unmatchedAssignees,
       membersShared,
       unmatchedMembers,
-      commentsImported,
+      commentsImported: commentsImported + subtaskCommentsImported,
+      subtasksImported,
     });
   } catch (err: any) {
     const status = err instanceof AsanaError ? err.status : 500;

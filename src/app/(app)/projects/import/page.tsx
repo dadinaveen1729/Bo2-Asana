@@ -22,6 +22,7 @@ type ImportResult = {
   membersShared?: number;
   alreadyImported?: boolean;
   commentsImported?: number;
+  subtasksImported?: number;
 };
 
 export default function ImportProjectsPage() {
@@ -123,6 +124,7 @@ export default function ImportProjectsPage() {
                     membersShared: json.membersShared,
                     alreadyImported: json.alreadyImported,
                     commentsImported: json.commentsImported,
+                    subtasksImported: json.subtasksImported,
                   }
                 : r
             )
@@ -244,12 +246,14 @@ export default function ImportProjectsPage() {
                   {r.status === 'done' && r.alreadyImported && (
                     <p className="text-xs text-ink-faint">
                       Already imported — {r.membersShared ? `added ${r.membersShared} new teammate${r.membersShared === 1 ? '' : 's'}` : 'sharing already up to date'}
-                      {!!r.commentsImported && `, pulled in ${r.commentsImported} comment${r.commentsImported === 1 ? '' : 's'} from Asana`}
+                      {!!r.subtasksImported && `, ${r.subtasksImported} subtask${r.subtasksImported === 1 ? '' : 's'}`}
+                      {!!r.commentsImported && `, ${r.commentsImported} comment${r.commentsImported === 1 ? '' : 's'} pulled in from Asana`}
                     </p>
                   )}
                   {r.status === 'done' && !r.alreadyImported && (
                     <p className="text-xs text-ink-faint">
                       {r.tasksImported} tasks imported
+                      {!!r.subtasksImported && ` · ${r.subtasksImported} subtask${r.subtasksImported === 1 ? '' : 's'}`}
                       {!!r.membersShared && ` · shared with ${r.membersShared} teammate${r.membersShared === 1 ? '' : 's'}`}
                       {!!r.commentsImported && ` · ${r.commentsImported} comment${r.commentsImported === 1 ? '' : 's'} pulled in`}
                     </p>

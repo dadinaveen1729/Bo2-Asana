@@ -104,14 +104,76 @@ function fieldColPx(type: CustomField['type']) {
   }
 }
 
-const NAME_COL = 'minmax(240px,480px)';
-const ASSIGNEE_COL = '64px';
-const PRIORITY_COL = '108px';
-const DUE_DATE_COL = '100px';
+const DEFAULT_COL_WIDTHS: Record<string, number> = {
+  name: 320,
+  assignee: 64,
+  priority: 108,
+  due_date: 100,
+};
+const MIN_COL_WIDTH: Record<string, number> = {
+  name: 160,
+  assignee: 48,
+  priority: 70,
+  due_date: 70,
+};
 const ADD_COL_COL = '32px';
 
-function rowGridTemplate(fields: CustomField[]) {
-  return [NAME_COL, ASSIGNEE_COL, PRIORITY_COL, DUE_DATE_COL, ...fields.map((f) => `${fieldColPx(f.type)}px`), ADD_COL_COL].join(' ');
+// Column widths are user-adjustable (see ResizeHandle) and persisted per
+// project in localStorage, so both header and row share this one function
+// -- same reasoning as the shared rowGridTemplate this replaces: whatever
+// widths are in play, header and row must build their grid-template from
+// the identical source or they drift out of alignment.
+function rowGridTemplate(fields: CustomField[], colWidths: Record<string, number>) {
+  const w = (key: string, fallback: number) => `${colWidths[key] ?? fallback}px`;
+  return [
+    w('name', DEFAULT_COL_WIDTHS.name),
+    w('assignee', DEFAULT_COL_WIDTHS.assignee),
+    w('priority', DEFAULT_COL_WIDTHS.priority),
+    w('due_date', DEFAULT_COL_WIDTHS.due_date),
+    ...fields.map((f) => w(f.id, fieldColPx(f.type))),
+    ADD_COL_COL,
+  ].join(' ');
+}
+
+// A thin drag strip on a header cell's right edge, matching Asana's
+// column-resize interaction. Uses the pointer capture API directly rather
+// than a drag-and-drop library since this is a single-axis width drag, not
+// a reorder -- dnd-kit (already in this file for task reordering) is the
+// wrong tool for it.
+function ResizeHandle({
+  colKey,
+  min,
+  colWidths,
+  onResize,
+}: {
+  colKey: string;
+  min: number;
+  colWidths: Record<string, number>;
+  onResize: (colKey: string, width: number) => void;
+}) {
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = colWidths[colKey] ?? DEFAULT_COL_WIDTHS[colKey] ?? 120;
+    function onMove(ev: PointerEvent) {
+      onResize(colKey, Math.max(min, startWidth + (ev.clientX - startX)));
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      className="absolute -right-1 top-0 z-10 h-full w-2 cursor-col-resize select-none"
+    >
+      <div className="mx-auto h-full w-px bg-transparent hover:bg-brand-400 active:bg-brand-500" />
+    </div>
+  );
 }
 
 export function ListView({ projectId, onAddColumn }: { projectId: string; onAddColumn?: () => void }) {
@@ -124,6 +186,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
   const supabase = useMemo(() => createClient(), []);
 
   const [columns, setColumns] = useState<Record<string, string[]>>({});
+  const [colWidths, setColWidthsState] = useState<Record<string, number>>(DEFAULT_COL_WIDTHS);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [addingIn, setAddingIn] = useState<string | null>(null);
@@ -151,6 +214,32 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
 
   const fieldIds = useMemo(() => fields.map((f) => f.id), [fields]);
   const visibleFields = useMemo(() => fields.filter((f) => !hiddenFieldIds.has(f.id)), [fields, hiddenFieldIds]);
+
+  // Column widths are remembered per project, same idea as Asana's own
+  // per-project column sizing. Loaded in an effect (not the useState
+  // initializer) so the very first server-rendered pass always matches the
+  // client's pre-hydration pass -- reading localStorage during render would
+  // make them diverge and trigger a hydration mismatch.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`boosthub-list-col-widths-${projectId}`);
+      if (raw) setColWidthsState({ ...DEFAULT_COL_WIDTHS, ...JSON.parse(raw) });
+    } catch {
+      // corrupt/blocked storage -- just keep the defaults
+    }
+  }, [projectId]);
+
+  function resizeColumn(colKey: string, width: number) {
+    setColWidthsState((prev) => {
+      const next = { ...prev, [colKey]: Math.round(width) };
+      try {
+        localStorage.setItem(`boosthub-list-col-widths-${projectId}`, JSON.stringify(next));
+      } catch {
+        // best-effort persistence -- resizing still works for this session either way
+      }
+      return next;
+    });
+  }
 
   const dndEnabled = groupField === 'section' && sortField === 'manual';
   const activeFilterCount = filterPriorities.size + filterAssignees.size + (filterDue !== 'any' ? 1 : 0);
@@ -689,20 +778,31 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
       */}
       <div className="overflow-x-auto">
       {groupMetas.length > 0 && (
-        <div className="flex w-max min-w-full items-center px-6 py-1.5">
-          <div className="w-[14px] shrink-0" />
-          <div className="w-4 shrink-0" />
+        <div className="flex w-max min-w-full items-center px-4 py-1.5">
           <div
             className="grid min-w-0 flex-none items-center divide-x divide-border"
-            style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}
+            style={{ gridTemplateColumns: rowGridTemplate(visibleFields, colWidths) }}
           >
-            <span className="block truncate pl-1 pr-2 text-[13px] font-medium text-ink-faint">Name</span>
-            <span className="px-2 text-[13px] font-medium text-ink-faint">Assignee</span>
-            <span className="px-2 text-[13px] font-medium text-ink-faint">Priority</span>
-            <span className="px-2 text-[13px] font-medium text-ink-faint">Due date</span>
+            <span className="relative block truncate pl-1 pr-2 text-[13px] font-medium text-ink-faint">
+              Name
+              <ResizeHandle colKey="name" min={MIN_COL_WIDTH.name} colWidths={colWidths} onResize={resizeColumn} />
+            </span>
+            <span className="relative px-2 text-[13px] font-medium text-ink-faint">
+              Assignee
+              <ResizeHandle colKey="assignee" min={MIN_COL_WIDTH.assignee} colWidths={colWidths} onResize={resizeColumn} />
+            </span>
+            <span className="relative px-2 text-[13px] font-medium text-ink-faint">
+              Priority
+              <ResizeHandle colKey="priority" min={MIN_COL_WIDTH.priority} colWidths={colWidths} onResize={resizeColumn} />
+            </span>
+            <span className="relative px-2 text-[13px] font-medium text-ink-faint">
+              Due date
+              <ResizeHandle colKey="due_date" min={MIN_COL_WIDTH.due_date} colWidths={colWidths} onResize={resizeColumn} />
+            </span>
             {visibleFields.map((f) => (
-              <span key={f.id} className="block truncate px-2 text-[13px] font-medium text-ink-faint">
+              <span key={f.id} className="relative block truncate px-2 text-[13px] font-medium text-ink-faint">
                 {f.name}
+                <ResizeHandle colKey={f.id} min={60} colWidths={colWidths} onResize={resizeColumn} />
               </span>
             ))}
             <button
@@ -769,7 +869,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                           <div
                             key={id}
                             className="group grid items-stretch divide-x divide-border border-b border-border last:border-b-0 hover:bg-surface-hover"
-                            style={{ gridTemplateColumns: rowGridTemplate(visibleFields) }}
+                            style={{ gridTemplateColumns: rowGridTemplate(visibleFields, colWidths) }}
                           >
                             <div className="min-w-0">
                               <ContextMenu>
