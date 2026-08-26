@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -813,6 +813,7 @@ export type Database = {
       projects: {
         Row: {
           archived: boolean
+          asana_gid: string | null
           color: string | null
           created_at: string
           created_by: string | null
@@ -832,6 +833,7 @@ export type Database = {
         }
         Insert: {
           archived?: boolean
+          asana_gid?: string | null
           color?: string | null
           created_at?: string
           created_by?: string | null
@@ -851,6 +853,7 @@ export type Database = {
         }
         Update: {
           archived?: boolean
+          asana_gid?: string | null
           color?: string | null
           created_at?: string
           created_by?: string | null
@@ -1399,6 +1402,7 @@ export type Database = {
       can_access_project: { Args: { p_id: string }; Returns: boolean }
       can_access_project_row: {
         Args: {
+          p_created_by: string
           p_id: string
           p_privacy: Database["public"]["Enums"]["project_privacy"]
           p_workspace_id: string

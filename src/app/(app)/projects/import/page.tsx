@@ -20,6 +20,7 @@ type ImportResult = {
   projectId?: string;
   tasksImported?: number;
   membersShared?: number;
+  alreadyImported?: boolean;
 };
 
 export default function ImportProjectsPage() {
@@ -113,7 +114,14 @@ export default function ImportProjectsPage() {
           setResults((rs) =>
             rs.map((r) =>
               r.gid === p.gid
-                ? { ...r, status: 'done', projectId: json.projectId, tasksImported: json.tasksImported, membersShared: json.membersShared }
+                ? {
+                    ...r,
+                    status: 'done',
+                    projectId: json.projectId,
+                    tasksImported: json.tasksImported,
+                    membersShared: json.membersShared,
+                    alreadyImported: json.alreadyImported,
+                  }
                 : r
             )
           );
@@ -231,7 +239,12 @@ export default function ImportProjectsPage() {
                 {r.status === 'error' && <XCircle size={16} className="shrink-0 text-red-600" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-ink">{r.name}</p>
-                  {r.status === 'done' && (
+                  {r.status === 'done' && r.alreadyImported && (
+                    <p className="text-xs text-ink-faint">
+                      Already imported — {r.membersShared ? `added ${r.membersShared} new teammate${r.membersShared === 1 ? '' : 's'}` : 'sharing already up to date'}
+                    </p>
+                  )}
+                  {r.status === 'done' && !r.alreadyImported && (
                     <p className="text-xs text-ink-faint">
                       {r.tasksImported} tasks imported
                       {!!r.membersShared && ` · shared with ${r.membersShared} teammate${r.membersShared === 1 ? '' : 's'}`}

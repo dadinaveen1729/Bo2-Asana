@@ -1,9 +1,32 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { listSections, listTasks, listProjectMembers, asanaColorToHex, AsanaError, type AsanaProject } from '@/lib/asana';
+import { listSections, listTasks, listProjectMembers, asanaColorToHex, AsanaError, type AsanaProject, type AsanaMember } from '@/lib/asana';
 import { colorForIndex } from '@/lib/utils';
 
 export const maxDuration = 60;
+
+// Matches Asana project members to existing Boost Hub accounts by email
+// (skipping anyone already a member) so both the fresh-import path and the
+// already-imported top-up path share the exact same matching logic.
+function matchNewMembers(
+  asanaMembers: AsanaMember[],
+  emailToUserId: Map<string, string>,
+  alreadyMemberIds: Set<string>
+) {
+  const toAdd = new Set<string>();
+  let unmatchedMembers = 0;
+  for (const m of asanaMembers) {
+    const email = m.email?.toLowerCase();
+    const matchedUserId = email ? emailToUserId.get(email) : undefined;
+    if (!matchedUserId) {
+      if (email) unmatchedMembers++;
+      continue;
+    }
+    if (alreadyMemberIds.has(matchedUserId)) continue;
+    toAdd.add(matchedUserId);
+  }
+  return { toAdd, unmatchedMembers };
+}
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -39,6 +62,49 @@ export async function POST(req: Request) {
       if (email) emailToUserId.set(email.toLowerCase(), row.user_id);
     }
 
+    // Nothing used to stop the same Asana project from being imported
+    // twice -- every click created a brand-new project + tasks from
+    // scratch, no memory of "this was already imported." A repeat import
+    // now just tops up sharing on the existing project instead of cloning
+    // everything again (see migration asana_import_dedup).
+    const { data: existingProject } = await supabase
+      .from('projects')
+      .select('id, name')
+      .eq('workspace_id', workspaceId)
+      .eq('asana_gid', project.gid)
+      .maybeSingle();
+
+    if (existingProject) {
+      const { data: existingMemberRows } = await supabase
+        .from('project_members')
+        .select('user_id')
+        .eq('project_id', existingProject.id);
+      const existingMemberIds = new Set((existingMemberRows || []).map((m) => m.user_id));
+
+      const { toAdd, unmatchedMembers } = matchNewMembers(asanaMembers, emailToUserId, existingMemberIds);
+      if (!existingMemberIds.has(user.id)) toAdd.add(user.id);
+
+      const rowsToInsert = Array.from(toAdd).map((userId) => ({
+        project_id: existingProject.id,
+        user_id: userId,
+        role: 'editor' as const,
+      }));
+      if (rowsToInsert.length) {
+        await supabase.from('project_members').insert(rowsToInsert);
+      }
+
+      return NextResponse.json({
+        projectId: existingProject.id,
+        projectName: existingProject.name,
+        alreadyImported: true,
+        sectionsImported: 0,
+        tasksImported: 0,
+        unmatchedAssignees: 0,
+        membersShared: rowsToInsert.length,
+        unmatchedMembers,
+      });
+    }
+
     const { data: newProject, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -49,6 +115,7 @@ export async function POST(req: Request) {
         description: project.notes || null,
         privacy: 'private',
         created_by: user.id,
+        asana_gid: project.gid,
       })
       .select()
       .single();
@@ -67,23 +134,13 @@ export async function POST(req: Request) {
     // existing Boost Hub accounts by email (same technique already used
     // for task assignees below) and add each match as a project member,
     // so the import doesn't quietly strand everyone else's access.
-    const addedMemberIds = new Set([user.id]);
-    let membersShared = 0;
-    let unmatchedMembers = 0;
-    for (const m of asanaMembers) {
-      const email = m.email?.toLowerCase();
-      const matchedUserId = email ? emailToUserId.get(email) : undefined;
-      if (!matchedUserId) {
-        if (email) unmatchedMembers++;
-        continue;
-      }
-      if (addedMemberIds.has(matchedUserId)) continue;
-      addedMemberIds.add(matchedUserId);
-      membersShared++;
-    }
-    const memberRowsToInsert = Array.from(addedMemberIds)
-      .filter((id) => id !== user.id)
-      .map((userId) => ({ project_id: newProject.id, user_id: userId, role: 'editor' as const }));
+    const { toAdd, unmatchedMembers } = matchNewMembers(asanaMembers, emailToUserId, new Set([user.id]));
+    const membersShared = toAdd.size;
+    const memberRowsToInsert = Array.from(toAdd).map((userId) => ({
+      project_id: newProject.id,
+      user_id: userId,
+      role: 'editor' as const,
+    }));
     if (memberRowsToInsert.length) {
       await supabase.from('project_members').insert(memberRowsToInsert);
     }
