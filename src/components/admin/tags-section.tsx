@@ -122,7 +122,7 @@ export function TagsSection({ workspaceId }: { workspaceId: string }) {
       {tags.length === 0 ? (
         <div className="mt-3 rounded-xl border border-dashed border-border py-8 text-center text-sm text-ink-faint">
           <TagsIcon className="mx-auto mb-2" size={18} />
-          No tags yet.
+          No tags yet — a blank canvas, really.
         </div>
       ) : (
         <div className="mt-3 overflow-hidden rounded-xl border border-border">

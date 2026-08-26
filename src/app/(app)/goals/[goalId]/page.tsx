@@ -112,7 +112,7 @@ export default function GoalDetailPage({ params }: { params: { goalId: string } 
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search projects..."
+              placeholder="Search for a project to link"
               className="mb-1.5 w-full rounded-md border border-border px-2.5 py-1.5 text-sm outline-none focus:border-brand-400"
             />
             <div className="max-h-56 space-y-0.5 overflow-y-auto">
@@ -122,7 +122,7 @@ export default function GoalDetailPage({ params }: { params: { goalId: string } 
                   <span className="block truncate">{p.name}</span>
                 </button>
               ))}
-              {available.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">No projects found</p>}
+              {available.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">Nothing turned up. All clear here.</p>}
             </div>
           </PopoverContent>
         </Popover>
@@ -142,7 +142,7 @@ export default function GoalDetailPage({ params }: { params: { goalId: string } 
             </div>
           );
         })}
-        {goal.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects connected yet. This goal is flying solo.</p>}
+        {goal.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects connected yet. This goal is holding its breath.</p>}
       </div>
     </div>
   );

@@ -60,7 +60,7 @@ function GoalsPageInner() {
       ) : goals.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-border py-16 text-center">
           <Target className="mx-auto mb-2 text-ink-faint" size={22} />
-          <p className="text-sm text-ink-muted">No goals yet. Set your team's first objective.</p>
+          <p className="text-sm text-ink-muted">No goals yet. Pick a target and take aim.</p>
         </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border">

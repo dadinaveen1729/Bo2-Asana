@@ -46,7 +46,7 @@ export function AssigneePicker({
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Assign to..."
+          placeholder="Who's catching this one?"
           className="mb-1.5 w-full rounded-md border border-border px-2.5 py-1.5 text-sm outline-none focus:border-brand-400"
         />
         <div className="max-h-56 space-y-0.5 overflow-y-auto">
@@ -69,7 +69,7 @@ export function AssigneePicker({
               {assignee?.id === m.id && <Check size={14} className="ml-auto text-brand-500" />}
             </button>
           ))}
-          {filtered.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">No members found</p>}
+          {filtered.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">No one's answering to that name</p>}
         </div>
       </PopoverContent>
     </Popover>
@@ -188,7 +188,7 @@ export function TagPicker({
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search or create tag..."
+          placeholder="Search or dream up a new tag..."
           className="mb-1.5 w-full rounded-md border border-border px-2.5 py-1.5 text-sm outline-none focus:border-brand-400"
         />
         <div className="max-h-48 space-y-0.5 overflow-y-auto">

@@ -129,7 +129,7 @@ export function MembersSection({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search members…"
+            placeholder="Find someone…"
             className="w-full rounded-lg border border-border py-1.5 pl-8 pr-3 text-sm focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-100"
           />
         </div>
@@ -137,7 +137,7 @@ export function MembersSection({
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
         {filteredRows.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-ink-faint">No members match &quot;{query}&quot;.</div>
+          <div className="px-4 py-8 text-center text-sm text-ink-faint">Couldn&apos;t find anyone named &quot;{query}&quot;.</div>
         ) : (
           filteredRows.map((r) => (
             <div key={r.user_id} className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0">
@@ -174,7 +174,7 @@ export function MembersSection({
         {invites.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border py-6 text-center text-sm text-ink-faint">
             <Mail className="mx-auto mb-1.5" size={16} />
-            No pending invites.
+            No pending invites — inbox zero, achievement unlocked.
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">

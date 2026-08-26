@@ -140,7 +140,7 @@ export function TeamsSection({ workspaceId, currentUserId }: { workspaceId: stri
       ) : teams.length === 0 ? (
         <div className="mt-3 rounded-xl border border-dashed border-border py-8 text-center text-sm text-ink-faint">
           <Users2 className="mx-auto mb-2" size={18} />
-          No teams yet.
+          No teams yet — assemble your crew.
         </div>
       ) : (
         <div className="mt-3 overflow-hidden rounded-xl border border-border">

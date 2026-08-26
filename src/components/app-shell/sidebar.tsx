@@ -181,7 +181,7 @@ export function Sidebar() {
               >
                 {starredProjects.length === 0 && (
                   <p className="px-2 py-2 text-xs leading-snug text-sidebar-ink-faint">
-                    Drag a project here to pin it
+                    Drag a project here to give it a permanent seat
                   </p>
                 )}
                 {starredProjects.map((p) => (
@@ -257,7 +257,7 @@ export function Sidebar() {
                       {open && (
                         <div className="ml-6 space-y-0.5 border-l border-sidebar-border pl-2">
                           {teamProjects.length === 0 && (
-                            <p className="py-1 pl-2 text-xs text-sidebar-ink-faint">No projects yet</p>
+                            <p className="py-1 pl-2 text-xs text-sidebar-ink-faint">Still catching its breath — no projects yet</p>
                           )}
                           {teamProjects.map((p) => (
                             <Link

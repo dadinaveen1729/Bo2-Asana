@@ -41,7 +41,7 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
     e.target.value = '';
     if (!file || !user) return;
     if (file.size > MAX_FILE_BYTES) {
-      toast.error('File must be under 25MB.');
+      toast.error("That file's a bit too heavy to lift — keep it under 25MB.");
       return;
     }
     setUploading(true);
@@ -76,7 +76,7 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
     const { data, error } = await supabase.storage.from('attachments').createSignedUrl(a.file_path, 3600);
     setOpeningId(null);
     if (error || !data) {
-      toast.error(error?.message || 'Could not open file.');
+      toast.error(error?.message || "Couldn't get that file open. Try again?");
       return;
     }
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
@@ -147,7 +147,7 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
             </div>
           );
         })}
-        {attachments.length === 0 && <p className="px-1.5 py-2 text-sm text-ink-faint">No attachments yet.</p>}
+        {attachments.length === 0 && <p className="px-1.5 py-2 text-sm text-ink-faint">Nothing attached yet — feels a little empty in here.</p>}
       </div>
       <div className="mt-1">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
@@ -158,7 +158,7 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
           className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-medium text-ink-faint hover:bg-surface-hover disabled:opacity-50"
         >
           {uploading ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-          {uploading ? 'Uploading…' : 'Attach file'}
+          {uploading ? 'Floating it up…' : 'Attach file'}
         </button>
       </div>
     </div>

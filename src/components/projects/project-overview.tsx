@@ -179,7 +179,7 @@ export function ProjectOverview({
                 <Loader2 className="animate-spin text-brand-500" size={16} />
               </div>
             ) : activity.length === 0 ? (
-              <p className="py-3 text-[13.5px] text-ink-faint">No activity yet.</p>
+              <p className="py-3 text-[13.5px] text-ink-faint">Not a peep yet. Quiet in here.</p>
             ) : (
               <div className="space-y-3">
                 {activity.map((a) => (
@@ -222,7 +222,7 @@ export function ProjectOverview({
                 <span className="text-[13.5px] text-ink">{owner.full_name || owner.email}</span>
               </div>
             ) : (
-              <span className="text-[13.5px] text-ink-faint">Unknown</span>
+              <span className="text-[13.5px] text-ink-faint">Nobody's claimed this one</span>
             )}
           </div>
           <div>
@@ -230,7 +230,7 @@ export function ProjectOverview({
             {projectMembers.length > 0 ? (
               <AvatarStack people={projectMembers} size={24} />
             ) : (
-              <span className="text-[13.5px] text-ink-faint">No members yet</span>
+              <span className="text-[13.5px] text-ink-faint">Nobody's clocked in yet</span>
             )}
           </div>
         </div>

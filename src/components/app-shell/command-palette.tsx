@@ -72,13 +72,13 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
             autoFocus
             value={query}
             onValueChange={setQuery}
-            placeholder="Search tasks, projects, teams..."
+            placeholder="Search tasks, projects, teams — go on, ask"
             className="flex-1 border-none text-sm text-ink outline-none placeholder:text-ink-faint"
           />
           <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-ink-faint">ESC</kbd>
         </div>
         <Command.List className="scrollbar-thin max-h-[60vh] overflow-y-auto p-2">
-          <Command.Empty className="py-8 text-center text-sm text-ink-faint">No results found.</Command.Empty>
+          <Command.Empty className="py-8 text-center text-sm text-ink-faint">No results found — not even an echo.</Command.Empty>
 
           {!query && (
             <Command.Group heading="Navigate" className="px-2 py-1.5 text-[11px] font-semibold uppercase text-ink-faint [&_[cmdk-group-items]]:mt-1">

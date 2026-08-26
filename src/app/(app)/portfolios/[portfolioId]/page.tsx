@@ -68,7 +68,7 @@ export default function PortfolioDetailPage({ params }: { params: { portfolioId:
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search projects..."
+              placeholder="Search for a project to add"
               className="mb-1.5 w-full rounded-md border border-border px-2.5 py-1.5 text-sm outline-none focus:border-brand-400"
             />
             <div className="max-h-56 space-y-0.5 overflow-y-auto">
@@ -78,7 +78,7 @@ export default function PortfolioDetailPage({ params }: { params: { portfolioId:
                   <span className="block truncate">{p.name}</span>
                 </button>
               ))}
-              {available.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">No projects found</p>}
+              {available.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-faint">Nothing here. Thin air only.</p>}
             </div>
           </PopoverContent>
         </Popover>
@@ -98,7 +98,7 @@ export default function PortfolioDetailPage({ params }: { params: { portfolioId:
             </div>
           );
         })}
-        {portfolio.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects added yet. This portfolio is looking pretty minimalist.</p>}
+        {portfolio.projects.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-faint">No projects added yet. This portfolio is running on fumes.</p>}
       </div>
     </div>
   );
