@@ -11,7 +11,16 @@ export function useFavorites(userId: string | undefined) {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const { data, error } = await supabase.from('project_favorites').select('project_id').eq('user_id', userId);
+    let { data, error } = await supabase.from('project_favorites').select('project_id').eq('user_id', userId);
+    if (error) {
+      // Right after login (especially on mobile, where the network/JS is
+      // slower to settle) the very first request sometimes lands before
+      // the session has fully warmed up and fails transiently -- not a
+      // real problem, just bad timing. One quiet retry clears almost all
+      // of these before ever surfacing an error toast.
+      await new Promise((r) => setTimeout(r, 800));
+      ({ data, error } = await supabase.from('project_favorites').select('project_id').eq('user_id', userId));
+    }
     if (error) {
       toast.error('Could not load starred projects');
     } else {

@@ -23,6 +23,25 @@ function windowEnd() {
 
 type DigestTask = { id: string; name: string; due_date: string };
 
+// A little personality on the daily nag email so it doesn't read like a
+// cron job wagging its finger at you. Picks a line based on whether
+// there's anything actually overdue, so it doesn't crack a joke while
+// also telling you you're behind.
+const OVERDUE_FOOTERS = [
+  "No judgment here. Okay, maybe a little.",
+  "The tasks aren't going anywhere. Unfortunately.",
+  "Past due, not past caring (probably).",
+];
+const ON_TRACK_FOOTERS = [
+  'Just a friendly nudge, not a fire drill.',
+  "You've got this. Deep breath, then go breathe some real air.",
+  'Sent with 100% more oxygen than the average reminder.',
+];
+function randomFooter(hasOverdue: boolean) {
+  const pool = hasOverdue ? OVERDUE_FOOTERS : ON_TRACK_FOOTERS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function renderTaskRow(t: DigestTask) {
   return `<a href="${APP_URL}/tasks/${t.id}" style="display: block; padding: 10px 12px; margin-bottom: 6px; background: #F9FAFB; border-radius: 8px; color: #101828; text-decoration: none; font-size: 14px;">
     <strong>${t.name}</strong>
@@ -111,11 +130,12 @@ export async function GET(req: Request) {
         ${overdue.length ? `<p style="font-size: 13px; font-weight: 600; color: #D92D20; margin: 16px 0 6px;">Overdue</p>${overdue.map(renderTaskRow).join('')}` : ''}
         ${dueSoon.length ? `<p style="font-size: 13px; font-weight: 600; color: #667085; margin: 16px 0 6px;">Due soon</p>${dueSoon.map(renderTaskRow).join('')}` : ''}
         <a href="${APP_URL}/my-tasks" style="display: inline-block; margin-top: 16px; padding: 10px 18px; background: #FC636B; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Open My Tasks</a>
+        <p style="margin-top: 20px; font-size: 12px; color: #98A2B3;">${randomFooter(overdue.length > 0)}</p>
       </div>
     `;
     const text = `Hi ${profile.full_name || profile.email},\n\n${subject}\n\n${userTasks
       .map((t) => `- ${t.name} (due ${t.due_date})`)
-      .join('\n')}\n\nOpen My Tasks: ${APP_URL}/my-tasks\n\n— Boost Hub`;
+      .join('\n')}\n\nOpen My Tasks: ${APP_URL}/my-tasks\n\n${randomFooter(overdue.length > 0)}\n\n— Boost Hub`;
 
     try {
       await transporter.sendMail({

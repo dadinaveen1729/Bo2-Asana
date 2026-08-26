@@ -3,6 +3,21 @@ import nodemailer from 'nodemailer';
 
 const APP_URL = 'https://bo2-asana.vercel.app';
 
+// A small bit of personality on every email -- picked at random per send
+// so it doesn't feel like the same canned line every time. Kept out of
+// the subject/body itself (which need to stay scannable) and off error
+// states entirely -- this is only ever the closing footer line.
+const FOOTER_LINES = [
+  "That's it. Go breathe some fresh air.",
+  'Sent with 100% more oxygen than the average email.',
+  "No reply-all needed -- we're not that kind of inbox.",
+  "Boost Hub: because sticky notes don't sync across devices.",
+  "You've been notified. Deep breath, you've got this.",
+];
+function randomFooter() {
+  return FOOTER_LINES[Math.floor(Math.random() * FOOTER_LINES.length)];
+}
+
 const SUBJECT_BY_TYPE: Record<string, (actor: string) => string> = {
   assigned: (a) => `${a} assigned you a task`,
   mentioned: (a) => `${a} mentioned you`,
@@ -47,13 +62,14 @@ export async function POST(req: Request) {
       from: '"Boost Hub" <boostoxygen30@gmail.com>',
       to: recipientEmail,
       subject,
-      text: `Hi ${recipientName || ''},\n\n${subject}.\n\n${message || ''}\n\nOpen it: ${link}\n\n— Boost Hub`,
+      text: `Hi ${recipientName || ''},\n\n${subject}.\n\n${message || ''}\n\nOpen it: ${link}\n\n${randomFooter()}\n\n— Boost Hub`,
       html: `
         <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
           <p style="font-size: 15px; color: #101828;">Hi ${recipientName || ''},</p>
           <p style="font-size: 15px; color: #101828;"><strong>${subject}</strong></p>
           ${message ? `<p style="font-size: 14px; color: #667085; padding: 12px; background: #F9FAFB; border-radius: 8px;">${message}</p>` : ''}
           <a href="${link}" style="display: inline-block; margin-top: 12px; padding: 10px 18px; background: #FC636B; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">${cta}</a>
+          <p style="margin-top: 20px; font-size: 12px; color: #98A2B3;">${randomFooter()}</p>
         </div>
       `,
     });
