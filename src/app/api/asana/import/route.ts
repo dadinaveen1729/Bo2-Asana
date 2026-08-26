@@ -215,12 +215,39 @@ export async function POST(req: Request) {
     // now just tops up sharing and backfills history on the existing
     // project instead of cloning everything again (see migration
     // asana_import_dedup).
-    const { data: existingProject } = await supabase
+    let { data: existingProject } = await supabase
       .from('projects')
       .select('id, name')
       .eq('workspace_id', workspaceId)
       .eq('asana_gid', project.gid)
       .maybeSingle();
+
+    // Projects imported before asana_gid tracking existed never recorded
+    // it, so the lookup above misses them -- without this, re-importing
+    // one of those older projects wouldn't recognize it as already
+    // imported and would just create yet another duplicate (exactly what
+    // happened here: re-importing to backfill history made a THIRD copy
+    // of 8 different projects, since neither of the first two had
+    // asana_gid set). Falls back to matching by name among projects that
+    // don't yet have an asana_gid recorded, so this can never merge into
+    // an unrelated project someone created by hand with a coincidentally
+    // matching name -- then self-heals asana_gid onto it so every future
+    // re-import matches directly.
+    if (!existingProject) {
+      const { data: unlinkedProjects } = await supabase
+        .from('projects')
+        .select('id, name')
+        .eq('workspace_id', workspaceId)
+        .is('asana_gid', null)
+        .order('created_at', { ascending: true });
+      const nameMatch = (unlinkedProjects || []).find(
+        (p) => p.name.trim().toLowerCase() === project.name.trim().toLowerCase()
+      );
+      if (nameMatch) {
+        await supabase.from('projects').update({ asana_gid: project.gid }).eq('id', nameMatch.id);
+        existingProject = nameMatch;
+      }
+    }
 
     if (existingProject) {
       const { data: existingMemberRows } = await supabase
