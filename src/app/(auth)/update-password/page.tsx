@@ -33,7 +33,7 @@ export default function UpdatePasswordPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Set a new password</h1>
-      <p className="mt-1 text-sm text-ink-muted">Choose a strong password for your account.</p>
+      <p className="mt-1 text-sm text-ink-muted">Fresh start. Make it a good one — no oxygen-related puns required, but we won't stop you.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>

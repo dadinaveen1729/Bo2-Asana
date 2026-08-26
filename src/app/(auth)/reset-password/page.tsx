@@ -35,8 +35,8 @@ export default function ResetPasswordPage() {
         </div>
         <h1 className="text-xl font-semibold text-ink">Check your inbox</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          If an account exists for <span className="font-medium text-ink">{email}</span>, we sent a link to reset
-          your password.
+          If an account exists for <span className="font-medium text-ink">{email}</span>, a reset link is on its
+          way. Give it a minute to catch its breath.
         </p>
         <Link href="/login" className="mt-6 inline-block text-sm font-semibold text-brand-600 hover:text-brand-700">
           Back to sign in
@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Reset your password</h1>
-      <p className="mt-1 text-sm text-ink-muted">Enter your email and we'll send you a reset link.</p>
+      <p className="mt-1 text-sm text-ink-muted">Happens to the best of us. Enter your email and we'll send you a reset link.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>

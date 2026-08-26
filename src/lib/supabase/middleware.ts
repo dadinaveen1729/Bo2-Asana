@@ -28,7 +28,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAuthRoute = path.startsWith('/login') || path.startsWith('/signup') || path.startsWith('/reset-password') || path.startsWith('/accept-invite');
+  const isAuthRoute = path.startsWith('/login') || path.startsWith('/signup') || path.startsWith('/reset-password') || path.startsWith('/accept-invite') || path.startsWith('/confirm');
+  // /auth/callback (PKCE code exchange) is how a signed-out browser
+  // actually completes a signup-confirmation or password-reset email
+  // link. It was never in this allowlist, so every single click on one of
+  // those links got 307'd to /login before the route ever ran -- the
+  // link's `code` param was just discarded on the way. Every signup
+  // confirmation and password reset has been broken since this route
+  // existed, independent of whether the email even arrived. (/confirm,
+  // the new token_hash-based verification page, is covered by
+  // isAuthRoute above since it lives under the (auth) route group.)
+  const isAuthCallback = path.startsWith('/auth/callback');
   // Server-to-server webhook routes (invoked by pg_net from a Postgres
   // trigger, not a browser) carry no session cookie and authenticate
   // themselves via an x-webhook-secret header instead. Without this bypass
@@ -64,7 +74,8 @@ export async function updateSession(request: NextRequest) {
     isWebhookRoute ||
     isShareImage ||
     isPwaAsset ||
-    isCronRoute;
+    isCronRoute ||
+    isAuthCallback;
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();
