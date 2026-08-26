@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { PwaRegister } from '@/components/pwa-register';
 import './globals.css';
 
 const inter = Inter({
@@ -16,6 +17,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: 'Boost Hub',
   description: DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Boost Hub',
+  },
   openGraph: {
     title: 'Boost Hub',
     description: DESCRIPTION,
@@ -33,6 +39,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#FC636B',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -41,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased">
         {children}
         <Toaster position="bottom-right" richColors closeButton />
+        <PwaRegister />
       </body>
     </html>
   );

@@ -41,7 +41,30 @@ export async function updateSession(request: NextRequest) {
   // bypass they'd get redirected to the /login HTML instead of the actual
   // image, so every shared link would show a blank/broken preview card.
   const isShareImage = path.startsWith('/opengraph-image') || path.startsWith('/twitter-image');
-  const isPublicAsset = path.startsWith('/_next') || path.startsWith('/favicon') || path.startsWith('/api/public') || isWebhookRoute || isShareImage;
+  // PWA install assets (manifest, home-screen icons, service worker) have to
+  // load with no session too -- e.g. from the logged-out /login page, or
+  // when iOS fetches them to build the "Add to Home Screen" icon. Without
+  // this bypass they'd 307-redirect to the /login HTML instead of the
+  // actual asset, so the installed icon/splash screen would just be broken.
+  const isPwaAsset =
+    path === '/manifest.webmanifest' ||
+    path === '/apple-icon' ||
+    path === '/icon.svg' ||
+    path === '/sw.js' ||
+    path.startsWith('/icon-192') ||
+    path.startsWith('/icon-512');
+  // Vercel Cron has no session cookie either; it authenticates itself via a
+  // CRON_SECRET bearer token checked inside the route handler, same pattern
+  // as the webhook bypass above.
+  const isCronRoute = path.startsWith('/api/cron/');
+  const isPublicAsset =
+    path.startsWith('/_next') ||
+    path.startsWith('/favicon') ||
+    path.startsWith('/api/public') ||
+    isWebhookRoute ||
+    isShareImage ||
+    isPwaAsset ||
+    isCronRoute;
 
   if (!user && !isAuthRoute && !isPublicAsset) {
     const url = request.nextUrl.clone();
