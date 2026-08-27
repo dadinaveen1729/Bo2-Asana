@@ -265,7 +265,20 @@ export async function POST(req: Request) {
     }
 
     if (existingProject) {
-      const { data: existingMemberRows } = await supabase
+      // Everything in this branch runs through the admin client, not the
+      // importer's own session. The whole point of this branch is "grant
+      // access to someone who doesn't have it yet" -- but project_members,
+      // task_projects, and comments all have RLS policies that (directly
+      // or via a nested lookup against `projects`) require the CALLER to
+      // already be able to see the private project in question. For
+      // someone who isn't a member yet, that's false by definition, so
+      // every one of these reads/writes was silently returning nothing or
+      // failing outright under the regular client -- not erroring, just
+      // quietly doing nothing, while the route still reported success.
+      // Reproduced live: Bernice's import reported "added 2 new
+      // teammates" on 6 different projects; she actually ended up a
+      // member of none of them.
+      const { data: existingMemberRows } = await admin
         .from('project_members')
         .select('user_id')
         .eq('project_id', existingProject.id);
@@ -279,9 +292,16 @@ export async function POST(req: Request) {
         user_id: userId,
         role: 'editor' as const,
       }));
-      if (rowsToInsert.length) {
-        await supabase.from('project_members').insert(rowsToInsert);
-      }
+      // Upsert + ignoreDuplicates rather than a plain insert: a single
+      // conflicting row in a batch insert fails the WHOLE statement, and
+      // the real inserted count is what the response should report, not
+      // the count we merely intended to insert.
+      const { data: insertedMembers } = rowsToInsert.length
+        ? await admin
+            .from('project_members')
+            .upsert(rowsToInsert, { onConflict: 'project_id,user_id', ignoreDuplicates: true })
+            .select('user_id')
+        : { data: [] };
 
       // Backfill history on an already-imported project: match each Asana
       // task to its existing Boost Hub task (by asana_gid if a prior import
@@ -289,7 +309,7 @@ export async function POST(req: Request) {
       // imported before that tracking existed), self-healing asana_gid and
       // the original created/completed dates onto anything found only by
       // name, then pull in any comments not already imported.
-      const { data: existingTaskLinks } = await supabase
+      const { data: existingTaskLinks } = await admin
         .from('task_projects')
         .select('tasks(id, name, asana_gid)')
         .eq('project_id', existingProject.id);
@@ -318,14 +338,14 @@ export async function POST(req: Request) {
       // demands every required Insert column even though only these three
       // are ever touched via ON CONFLICT DO UPDATE.
       for (const row of backfillRows) {
-        await supabase
+        await admin
           .from('tasks')
           .update({ asana_gid: row.asana_gid, created_at: row.created_at, completed_at: row.completed_at })
           .eq('id', row.id);
       }
-      const commentsImported = await importComments(supabase, token, pairs, user.id);
+      const commentsImported = await importComments(admin, token, pairs, user.id);
       const { subtasksImported, subtaskCommentsImported } = await importSubtasksAndComments(
-        supabase,
+        admin,
         token,
         workspaceId,
         pairs,
@@ -340,7 +360,7 @@ export async function POST(req: Request) {
         sectionsImported: 0,
         tasksImported: 0,
         unmatchedAssignees: 0,
-        membersShared: rowsToInsert.length,
+        membersShared: insertedMembers?.length || 0,
         unmatchedMembers,
         commentsImported: commentsImported + subtaskCommentsImported,
         subtasksImported,
@@ -377,15 +397,21 @@ export async function POST(req: Request) {
     // for task assignees below) and add each match as a project member,
     // so the import doesn't quietly strand everyone else's access.
     const { toAdd, unmatchedMembers } = matchNewMembers(asanaMembers, emailToUserId, new Set([user.id]));
-    const membersShared = toAdd.size;
     const memberRowsToInsert = Array.from(toAdd).map((userId) => ({
       project_id: newProject.id,
       user_id: userId,
       role: 'editor' as const,
     }));
-    if (memberRowsToInsert.length) {
-      await supabase.from('project_members').insert(memberRowsToInsert);
-    }
+    // Upsert + real returned count, not the intended count -- see the
+    // matching comment in the already-imported branch above for why a
+    // plain insert can silently under-report.
+    const { data: insertedNewMembers } = memberRowsToInsert.length
+      ? await admin
+          .from('project_members')
+          .upsert(memberRowsToInsert, { onConflict: 'project_id,user_id', ignoreDuplicates: true })
+          .select('user_id')
+      : { data: [] };
+    const membersShared = insertedNewMembers?.length || 0;
 
     // Asana projects commonly have several sections that share a display name
     // (e.g. multiple "Untitled section"s), so sections must be matched by
