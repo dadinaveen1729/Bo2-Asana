@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   listSections,
   listTasks,
@@ -215,7 +216,21 @@ export async function POST(req: Request) {
     // now just tops up sharing and backfills history on the existing
     // project instead of cloning everything again (see migration
     // asana_import_dedup).
-    let { data: existingProject } = await supabase
+    //
+    // This detection query MUST bypass RLS (via the service-role admin
+    // client), not use the importer's own session -- projects default to
+    // private, so if someone else already imported this Asana project and
+    // the current importer isn't a member of it yet, their own RLS-scoped
+    // view legitimately sees nothing. Without the admin client, the
+    // duplicate-detection check would silently miss it and try to create
+    // a second copy, which the database's own unique constraint then
+    // (correctly) rejects -- surfacing as a raw, unhandled "duplicate key
+    // value violates unique constraint" error to the user instead of the
+    // intended "already imported, adding you" outcome. Reproduced live:
+    // Bernice importing "Mechanic's Projects" (private, created by Anne,
+    // Bernice not yet a member) hit exactly this.
+    const admin = createAdminClient();
+    let { data: existingProject } = await admin
       .from('projects')
       .select('id, name')
       .eq('workspace_id', workspaceId)
@@ -234,7 +249,7 @@ export async function POST(req: Request) {
     // matching name -- then self-heals asana_gid onto it so every future
     // re-import matches directly.
     if (!existingProject) {
-      const { data: unlinkedProjects } = await supabase
+      const { data: unlinkedProjects } = await admin
         .from('projects')
         .select('id, name')
         .eq('workspace_id', workspaceId)
@@ -244,7 +259,7 @@ export async function POST(req: Request) {
         (p) => p.name.trim().toLowerCase() === project.name.trim().toLowerCase()
       );
       if (nameMatch) {
-        await supabase.from('projects').update({ asana_gid: project.gid }).eq('id', nameMatch.id);
+        await admin.from('projects').update({ asana_gid: project.gid }).eq('id', nameMatch.id);
         existingProject = nameMatch;
       }
     }
