@@ -462,9 +462,14 @@ export default function HomePage() {
       <div>
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-ink">Projects</h2>
-          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700">
-            <Plus size={12} /> New project
-          </button>
+          <div className="flex items-center gap-3">
+            <Link href="/projects" className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700">
+              View all <ArrowRight size={12} />
+            </Link>
+            <button onClick={() => setCreateOpen(true)} className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700">
+              <Plus size={12} /> New project
+            </button>
+          </div>
         </div>
         <div className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-faint">
           Recents <ChevronDown size={12} />
