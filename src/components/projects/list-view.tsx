@@ -817,7 +817,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-        <div className="px-4">
+        <div className="w-max min-w-full px-4">
           {groupField !== 'section' && addingIn === primarySectionKey && (
             <div className="mb-2 flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2">
               <Plus size={14} className="text-ink-faint" />
