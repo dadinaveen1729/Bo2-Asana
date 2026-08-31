@@ -1,12 +1,12 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, Flag, Plus, Tag as TagIcon, User, X } from 'lucide-react';
+import { Check, ChevronDown, Flag, Plus, Repeat, Tag as TagIcon, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useWorkspace } from '@/lib/workspace-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar } from '@/components/ui/avatar';
-import { MiniCalendar } from '@/components/ui/mini-calendar';
+import { MiniCalendar, type Recurrence } from '@/components/ui/mini-calendar';
 import { cn, PRIORITY_META, isOverdue, isDueSoon } from '@/lib/utils';
 import type { Tables } from '@/types/database';
 
@@ -79,11 +79,19 @@ export function AssigneePicker({
 export function DatePickerButton({
   date,
   onChange,
+  time = null,
+  onTimeChange,
+  recurrence = 'none',
+  onRecurrenceChange,
   completed = false,
   label = 'Due date',
 }: {
   date: string | null;
   onChange: (d: string | null) => void;
+  time?: string | null;
+  onTimeChange?: (t: string | null) => void;
+  recurrence?: Recurrence;
+  onRecurrenceChange?: (r: Recurrence) => void;
   completed?: boolean;
   label?: string;
 }) {
@@ -103,14 +111,24 @@ export function DatePickerButton({
             date && !overdue && !soon && 'bg-surface-hover text-ink-muted'
           )}
         >
-          {date ? format(new Date(date + 'T00:00:00'), 'MMM d') : label}
+          {date
+            ? format(new Date(date + 'T00:00:00'), 'MMM d') + (time ? `, ${format(new Date(`1970-01-01T${time}`), 'h:mm a')}` : '')
+            : label}
+          {recurrence && recurrence !== 'none' && <Repeat size={11} />}
         </button>
       </PopoverTrigger>
       <PopoverContent className="p-2">
         <MiniCalendar
           selected={date ? new Date(date + 'T00:00:00') : null}
-          onSelect={(d) => { onChange(format(d, 'yyyy-MM-dd')); setOpen(false); }}
-          onClear={date ? () => { onChange(null); setOpen(false); } : undefined}
+          onSelect={(d) => {
+            onChange(format(d, 'yyyy-MM-dd'));
+            if (!onTimeChange && !onRecurrenceChange) setOpen(false);
+          }}
+          onClear={date ? () => { onChange(null); onTimeChange?.(null); onRecurrenceChange?.('none'); setOpen(false); } : undefined}
+          time={time}
+          onTimeChange={onTimeChange && date ? onTimeChange : undefined}
+          recurrence={recurrence}
+          onRecurrenceChange={onRecurrenceChange && date ? onRecurrenceChange : undefined}
         />
       </PopoverContent>
     </Popover>

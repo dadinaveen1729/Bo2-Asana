@@ -20,6 +20,7 @@ import { useTaskPanel } from '@/lib/task-panel-context';
 import { useUndo } from '@/lib/undo-context';
 import { TaskRow } from '@/components/tasks/task-row';
 import { AssigneePicker, DatePickerButton, PriorityPicker } from '@/components/tasks/pickers';
+import type { Recurrence } from '@/components/ui/mini-calendar';
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
@@ -288,7 +289,7 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
     if (error) toast.error(error.message);
   }
 
-  async function updateTaskField(taskId: string, patch: Partial<Pick<ProjectTask, 'assignee_id' | 'priority' | 'due_date'>>) {
+  async function updateTaskField(taskId: string, patch: Partial<Pick<ProjectTask, 'assignee_id' | 'priority' | 'due_date' | 'due_time' | 'recurrence'>>) {
     const { error } = await supabase.from('tasks').update(patch).eq('id', taskId);
     if (error) toast.error(error.message);
   }
@@ -953,6 +954,10 @@ export function ListView({ projectId, onAddColumn }: { projectId: string; onAddC
                                 date={t.due_date}
                                 completed={t.completed}
                                 onChange={(d) => updateTaskField(t.id, { due_date: d })}
+                                time={t.due_time}
+                                onTimeChange={(time) => updateTaskField(t.id, { due_time: time })}
+                                recurrence={(t.recurrence as Recurrence) || 'none'}
+                                onRecurrenceChange={(recurrence) => updateTaskField(t.id, { recurrence })}
                               />
                             </div>
                             {visibleFields.map((f) => (

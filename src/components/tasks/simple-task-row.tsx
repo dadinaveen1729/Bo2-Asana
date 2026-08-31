@@ -3,6 +3,7 @@
 import { useTaskPanel } from '@/lib/task-panel-context';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePickerButton, PriorityPicker } from '@/components/tasks/pickers';
+import type { Recurrence } from '@/components/ui/mini-calendar';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { Hash } from 'lucide-react';
@@ -36,7 +37,17 @@ export function SimpleTaskRow({ task, showProject = true }: { task: MyTask; show
         </span>
       ))}
       <span className="shrink-0"><PriorityPicker priority={task.priority} onChange={(p) => updateTask({ priority: p })} /></span>
-      <span className="shrink-0"><DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} /></span>
+      <span className="shrink-0">
+        <DatePickerButton
+          date={task.due_date}
+          completed={task.completed}
+          onChange={(d) => updateTask({ due_date: d })}
+          time={task.due_time}
+          onTimeChange={(t) => updateTask({ due_time: t })}
+          recurrence={(task.recurrence as Recurrence) || 'none'}
+          onRecurrenceChange={(r) => updateTask({ recurrence: r })}
+        />
+      </span>
     </div>
   );
 }

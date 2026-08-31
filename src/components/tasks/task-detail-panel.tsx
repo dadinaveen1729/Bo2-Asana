@@ -21,6 +21,7 @@ import { useTags } from '@/hooks/use-tags';
 import { useCustomFields } from '@/hooks/use-custom-fields';
 import { useSections } from '@/hooks/use-sections';
 import { AssigneePicker, DatePickerButton, PriorityPicker, TagPicker } from '@/components/tasks/pickers';
+import type { Recurrence } from '@/components/ui/mini-calendar';
 import { CustomFieldInput } from '@/components/tasks/custom-field-input';
 import { TaskAttachments } from '@/components/tasks/task-attachments';
 import { createClient } from '@/lib/supabase/client';
@@ -230,7 +231,15 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
           </div>
           <div className="flex items-center gap-3">
             <span className="w-24 shrink-0 text-xs font-medium text-ink-faint">Due date</span>
-            <DatePickerButton date={task.due_date} completed={task.completed} onChange={(d) => updateTask({ due_date: d })} />
+            <DatePickerButton
+              date={task.due_date}
+              completed={task.completed}
+              onChange={(d) => updateTask({ due_date: d })}
+              time={task.due_time}
+              onTimeChange={(t) => updateTask({ due_time: t })}
+              recurrence={(task.recurrence as Recurrence) || 'none'}
+              onRecurrenceChange={(r) => updateTask({ recurrence: r })}
+            />
           </div>
           {primaryProject && (
             <div className="flex items-center gap-3">
