@@ -1,15 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Loader2, MailCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+const RESET_LINES = [
+  "Happens to the best of us. Enter your email and we'll send you a reset link.",
+  "Forgot it? No judgment here — enter your email and we'll sort you out.",
+  "We've all been there. Type your email and we'll send the rescue link.",
+];
+
+function dailyLine(lines: string[], now: Date) {
+  return lines[Math.floor(now.getTime() / 86400000) % lines.length];
+}
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +60,7 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Reset your password</h1>
-      <p className="mt-1 text-sm text-ink-muted">Happens to the best of us. Enter your email and we'll send you a reset link.</p>
+      <p className="mt-1 text-sm text-ink-muted">{now ? dailyLine(RESET_LINES, now) : RESET_LINES[0]}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -72,7 +84,7 @@ export default function ResetPasswordPage() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60"
         >
           {loading && <Loader2 size={15} className="animate-spin" />}
-          Send reset link
+          {loading ? 'Sending it your way…' : 'Send reset link'}
         </button>
       </form>
 

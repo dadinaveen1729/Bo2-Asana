@@ -90,7 +90,7 @@ function ConfirmForm() {
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60"
       >
         {loading && <Loader2 size={15} className="animate-spin" />}
-        {copy.cta}
+        {loading ? 'Just a sec…' : copy.cta}
       </button>
 
       <p className="mt-6 text-center text-sm text-ink-muted">

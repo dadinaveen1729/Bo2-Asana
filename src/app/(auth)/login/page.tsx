@@ -1,10 +1,26 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+// Same rotating-by-day trick as the Home page greeting: stable for the
+// whole day and identical between server and client renders, so it needs
+// the deferred-to-client dance below rather than computing at render time.
+const LOGIN_LINES = [
+  "Sign in with your Boost Oxygen account. Deep breath — you've got this.",
+  'Back again? We kept your seat warm.',
+  "One password between you and your task list.",
+  "Ready when you are. We've got oxygen to spare.",
+  'Welcome back — the tasks missed you more than you missed them.',
+  'Sign in, breathe easy, get to work.',
+];
+
+function dailyLine(lines: string[], now: Date) {
+  return lines[Math.floor(now.getTime() / 86400000) % lines.length];
+}
 
 export default function LoginPage() {
   return (
@@ -22,6 +38,8 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +59,7 @@ function LoginForm() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Welcome back</h1>
-      <p className="mt-1 text-sm text-ink-muted">Sign in with your Boost Oxygen account. Deep breath — you've got this.</p>
+      <p className="mt-1 text-sm text-ink-muted">{now ? dailyLine(LOGIN_LINES, now) : LOGIN_LINES[0]}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -92,7 +110,7 @@ function LoginForm() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60"
         >
           {loading && <Loader2 size={15} className="animate-spin" />}
-          Sign in
+          {loading ? 'Signing you in…' : 'Sign in'}
         </button>
       </form>
 

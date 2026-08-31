@@ -1,9 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Loader2, MailCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+// Same rotating-by-day trick as the Home page greeting -- stable for the
+// whole day and identical between server and client renders, hence the
+// deferred-to-client dance below instead of computing at render time.
+const SIGNUP_LINES = [
+  'Use your @boostoxygen.com email to join the team workspace. Takes less time than a coffee break.',
+  "New here? Let's get you set up — easier than assembling flat-pack furniture.",
+  'One form stands between you and your very own task list.',
+  'Grab your @boostoxygen.com email and let\'s make this official.',
+  "Fresh account, fresh start. Way less scary than onboarding paperwork, promise.",
+];
+
+function dailyLine(lines: string[], now: Date) {
+  return lines[Math.floor(now.getTime() / 86400000) % lines.length];
+}
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -12,6 +27,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +85,7 @@ export default function SignupPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Create your account</h1>
-      <p className="mt-1 text-sm text-ink-muted">Use your @boostoxygen.com email to join the team workspace. Takes less time than a coffee break.</p>
+      <p className="mt-1 text-sm text-ink-muted">{now ? dailyLine(SIGNUP_LINES, now) : SIGNUP_LINES[0]}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -103,6 +120,11 @@ export default function SignupPage() {
             placeholder="At least 8 characters"
             className="w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-100"
           />
+          {password.length > 0 && (
+            <p className={`mt-1 text-xs ${password.length >= 8 ? 'text-green-600' : 'text-ink-faint'}`}>
+              {password.length >= 8 ? "Nice, that'll do." : `${8 - password.length} more character${8 - password.length === 1 ? '' : 's'} to go.`}
+            </p>
+          )}
         </div>
 
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
@@ -113,7 +135,7 @@ export default function SignupPage() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60"
         >
           {loading && <Loader2 size={15} className="animate-spin" />}
-          Create account
+          {loading ? 'Setting up your desk…' : 'Create account'}
         </button>
       </form>
 

@@ -47,6 +47,11 @@ export default function UpdatePasswordPage() {
             placeholder="At least 8 characters"
             className="w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-100"
           />
+          {password.length > 0 && (
+            <p className={`mt-1 text-xs ${password.length >= 8 ? 'text-green-600' : 'text-ink-faint'}`}>
+              {password.length >= 8 ? "That'll do nicely." : `${8 - password.length} more character${8 - password.length === 1 ? '' : 's'} to go.`}
+            </p>
+          )}
         </div>
 
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
@@ -57,7 +62,7 @@ export default function UpdatePasswordPage() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60"
         >
           {loading && <Loader2 size={15} className="animate-spin" />}
-          Update password
+          {loading ? 'Locking it in…' : 'Update password'}
         </button>
       </form>
     </div>
