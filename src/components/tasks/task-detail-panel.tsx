@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import {
-  Bell, BellOff, Check, ChevronRight, Copy, Heart, Link2, Loader2, MoreHorizontal,
+  ArrowUpDown, Bell, BellOff, Check, ChevronRight, Copy, Heart, Link2, Loader2, MoreHorizontal,
   Plus, Send, Trash2, X, ExternalLink, GitBranch,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -72,6 +74,8 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
   const [depQuery, setDepQuery] = useState('');
   const [depResults, setDepResults] = useState<{ id: string; name: string }[]>([]);
   const [showDepSearch, setShowDepSearch] = useState(false);
+  const [feedTab, setFeedTab] = useState<'all' | 'comments'>('all');
+  const [feedSort, setFeedSort] = useState<'oldest' | 'newest'>('oldest');
 
   useEffect(() => {
     if (task) {
@@ -108,12 +112,15 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
 
   const iLike = user ? likes.includes(user.id) : false;
   const iFollow = user ? followers.includes(user.id) : false;
-  const feed = [
+  const fullFeed = [
     ...comments.map((c) => ({ type: 'comment' as const, at: c.created_at, data: c })),
     ...activity
       .filter((a) => a.action !== 'created')
       .map((a) => ({ type: 'activity' as const, at: a.created_at, data: a })),
-  ].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+  ];
+  const feed = fullFeed
+    .filter((item) => feedTab === 'all' || item.type === 'comment')
+    .sort((a, b) => (feedSort === 'oldest' ? 1 : -1) * (new Date(a.at).getTime() - new Date(b.at).getTime()));
 
   async function handleComment() {
     if (!comment.trim() || !user || !task) return;
@@ -416,7 +423,35 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
 
         {/* Activity + comments feed */}
         <div className="mt-5 border-t border-border pt-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">Activity</p>
+          <div className="mb-3 flex items-center justify-between">
+            <Tabs value={feedTab} onValueChange={(v) => setFeedTab(v as typeof feedTab)}>
+              <TabsList>
+                <TabsTrigger value="all">All activity</TabsTrigger>
+                <TabsTrigger value="comments">Comments</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-ink-faint hover:bg-surface-hover">
+                  <ArrowUpDown size={12} /> {feedSort === 'oldest' ? 'Oldest' : 'Newest'}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-36 p-1.5">
+                <button
+                  onClick={() => setFeedSort('oldest')}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm hover:bg-surface-hover"
+                >
+                  Oldest first {feedSort === 'oldest' && <Check size={13} className="ml-auto text-brand-500" />}
+                </button>
+                <button
+                  onClick={() => setFeedSort('newest')}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm hover:bg-surface-hover"
+                >
+                  Newest first {feedSort === 'newest' && <Check size={13} className="ml-auto text-brand-500" />}
+                </button>
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="space-y-3.5">
             {feed.map((item, i) =>
               item.type === 'comment' ? (
@@ -440,6 +475,11 @@ function TaskDetailBody({ taskId, onClose, onOpenTask }: { taskId: string; onClo
                   <span>· {formatDistanceToNow(new Date(item.at), { addSuffix: true })}</span>
                 </div>
               )
+            )}
+            {feed.length === 0 && (
+              <p className="text-sm text-ink-faint">
+                {feedTab === 'comments' ? 'No comments yet — say something nice.' : 'Nothing here yet.'}
+              </p>
             )}
           </div>
         </div>

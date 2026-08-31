@@ -43,6 +43,7 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
   const [files, setFiles] = useState<FileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +139,27 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   }
 
+  // Same reasoning as the task-panel version of this component: the
+  // `download` signed-URL option is what actually gets Supabase Storage to
+  // send Content-Disposition: attachment, forcing a real save-to-disk
+  // instead of just navigating to the file.
+  async function handleDownload(f: FileRow) {
+    setDownloadingId(f.id);
+    const supabase = createClient();
+    const { data, error } = await supabase.storage.from('attachments').createSignedUrl(f.file_path, 3600, { download: f.file_name });
+    setDownloadingId(null);
+    if (error || !data) {
+      toast.error(error?.message || 'Could not download file.');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = data.signedUrl;
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   async function handleDelete(f: FileRow) {
     setDeletingId(f.id);
     const supabase = createClient();
@@ -224,8 +246,13 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
                 <span className="w-20 shrink-0 text-[13px] text-ink-faint">{formatBytes(f.file_size)}</span>
                 <span className="w-24 shrink-0 text-[13px] text-ink-faint">{formatDistanceToNow(new Date(f.created_at), { addSuffix: true })}</span>
                 <div className="flex w-16 shrink-0 items-center justify-end gap-1">
-                  <button onClick={() => handleOpen(f)} title="Download" className="rounded-md p-1 text-ink-faint opacity-0 hover:bg-white group-hover:opacity-100">
-                    <Download size={13} />
+                  <button
+                    onClick={() => handleDownload(f)}
+                    disabled={downloadingId === f.id}
+                    title="Download"
+                    className="rounded-md p-1 text-ink-faint opacity-0 hover:bg-white group-hover:opacity-100 disabled:opacity-50"
+                  >
+                    {downloadingId === f.id ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
                   </button>
                   {canDelete(f) && (
                     <button

@@ -33,6 +33,7 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
   const { user, role } = useWorkspace();
   const [uploading, setUploading] = useState(false);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,6 +83,28 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   }
 
+  // Distinct from handleOpen: this asks Supabase Storage to set
+  // Content-Disposition: attachment (via the `download` signed-URL option),
+  // so the browser actually saves the file under its real name instead of
+  // just navigating to it -- a plain <a download> wouldn't force this since
+  // the signed URL is cross-origin.
+  async function handleDownload(a: Tables<'attachments'>) {
+    setDownloadingId(a.id);
+    const supabase = createClient();
+    const { data, error } = await supabase.storage.from('attachments').createSignedUrl(a.file_path, 3600, { download: a.file_name });
+    setDownloadingId(null);
+    if (error || !data) {
+      toast.error(error?.message || "Couldn't download that file. Try again?");
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = data.signedUrl;
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   async function handleDelete(a: Tables<'attachments'>) {
     setDeletingId(a.id);
     const supabase = createClient();
@@ -128,11 +151,12 @@ export function TaskAttachments({ taskId, attachments }: { taskId: string; attac
                 <span className="shrink-0 text-xs text-ink-faint">{formatBytes(a.file_size)}</span>
               </button>
               <button
-                onClick={() => handleOpen(a)}
+                onClick={() => handleDownload(a)}
+                disabled={downloadingId === a.id}
                 title="Download"
-                className="shrink-0 rounded-md p-1 text-ink-faint opacity-0 hover:bg-white group-hover:opacity-100"
+                className="shrink-0 rounded-md p-1 text-ink-faint opacity-0 hover:bg-white group-hover:opacity-100 disabled:opacity-50"
               >
-                <Download size={13} />
+                {downloadingId === a.id ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
               </button>
               {canDelete(a) && (
                 <button
